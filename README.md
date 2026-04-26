@@ -43,6 +43,8 @@ cmake --build build
 ```cpp
 #include <mongoose-cpp.hpp>
 
+using namespace mg::http;
+
 int main() {
     mg::server server;
     if (!server.listen("http://127.0.0.1:8080")) {
@@ -50,22 +52,22 @@ int main() {
     }
 
     // Lambda handler
-    server.register_http("/", [](const mg::http::request& req,
-                                 const std::shared_ptr<mg::http::response>& res) {
-        res->send(mg::http::status_code::ok, "Hello, world!");
+    server.register_http("/", [](const request& req,
+                                 const std::shared_ptr<response>& res) {
+        res->send(status_code::ok, "Hello, world!");
     });
 
     // Parameterised route — captures the path segment after /user/
-    server.register_http("/user/#", [](const mg::http::request& req,
-                                       const std::shared_ptr<mg::http::response>& res) {
+    server.register_http("/user/#", [](const request& req,
+                                       const std::shared_ptr<response>& res) {
         std::string body{req.get_param(0)};
-        res->send(mg::http::status_code::ok, "User: " + body);
+        res->send(status_code::ok, "User: " + body);
     });
 
     // Fallback / 404 handler
-    server.register_http_fallback([](const mg::http::request&,
-                                     const std::shared_ptr<mg::http::response>& res) {
-        res->send(mg::http::status_code::not_found, "Not found");
+    server.register_http_fallback([](const request&,
+                                     const std::shared_ptr<response>& res) {
+        res->send(status_code::not_found, "Not found");
     });
 
     while (true) {

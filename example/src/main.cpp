@@ -4,18 +4,19 @@
 #include <iostream>
 #include <mongoose-cpp.hpp>
 
-void simple_handler(const mg::http::request&,
-                    const std::shared_ptr<mg::http::response>& res) {
-  res->send(200, "I'm a raw function callback.");
+using namespace mg::http;
+
+void simple_handler(const request&, const std::shared_ptr<response>& res) {
+  res->send(status_code::ok, "I'm a raw function callback.");
 }
 
 class example {
   int trick = 67;
 
  public:
-  void simple(const mg::http::request&,
-              const std::shared_ptr<mg::http::response>& res) {
-    res->send(200, std::format("I'm a class member callback: {}", trick));
+  void simple(const request&, const std::shared_ptr<response>& res) {
+    res->send(status_code::ok,
+              std::format("I'm a class member callback: {}", trick));
   }
 };
 
@@ -35,16 +36,15 @@ int main(int, char**) {
   }
   server.register_http("/c", &simple_handler);
   server.register_http("/class", &ex, &example::simple);
-  server.register_http("/lambda",
-                       [](const mg::http::request&,
-                          const std::shared_ptr<mg::http::response>& res) {
-                         res->send(200, "I'm a lambda callback.");
-                       });
   server.register_http(
-      "/api/#", [](const mg::http::request& req,
-                   const std::shared_ptr<mg::http::response>& res) {
-        res->send(200,
-                  std::format("I'm capturing one group for API endpoints: {}", req.get_param(0)));
+      "/lambda", [](const request&, const std::shared_ptr<response>& res) {
+        res->send(status_code::ok, "I'm a lambda callback.");
+      });
+  server.register_http(
+      "/api/#", [](const request& req, const std::shared_ptr<response>& res) {
+        res->send(status_code::ok,
+                  std::format("I'm capturing one group for API endpoints: {}",
+                              req.get_param(0)));
       });
   while (is_running) {
     server.poll(100);
