@@ -2,9 +2,13 @@
 
 ![version: work in progress](https://img.shields.io/badge/version-work%20in%20progress-orange)
 
-A modern C++20 wrapper around the [Mongoose](https://github.com/cesanta/mongoose) embedded web server library.
+A modern C++20 wrapper around the 
+[Mongoose](https://github.com/cesanta/mongoose) embedded web server library.
 
-mongoose-cpp provides a clean, expressive API for building HTTP servers in C++, hiding the C-level details of Mongoose behind thin, zero-overhead abstractions — while preserving full compatibility with embedded and resource-constrained targets.
+mongoose-cpp provides a clean, expressive API for building HTTP servers in C++, 
+hiding the C-level details of Mongoose behind thin, zero-overhead abstractions —
+while preserving full compatibility with embedded and resource-constrained 
+targets.
 
 ## Features
 
@@ -20,14 +24,20 @@ mongoose-cpp provides a clean, expressive API for building HTTP servers in C++, 
 - **C++ standard:** C++20
 - **Build system:** CMake 4.2+
 - **Compilers:** MSVC, GCC, Clang
-- **Platforms:** Linux, Windows, and any platform supported by Mongoose (ESP32, STM32, ARM, RISC-V, etc.)
+- **Platforms:** Linux, Windows, and any platform supported by Mongoose (ESP32, 
+  STM32, ARM, RISC-V, etc.)
 - **Mongoose version:** 7.21
 
 ## License
 
-mongoose-cpp is licensed under the **GNU General Public License v2.0** (GPL-2.0).
+mongoose-cpp is licensed under the **GNU General Public License v2.0**
+(GPL-2.0).
 
-The bundled [Mongoose](https://github.com/cesanta/mongoose) library is dual-licensed under **GPL-2.0** or a commercial license by Cesanta Software Limited. If you intend to use this project in a proprietary/commercial product, you must obtain a commercial license for Mongoose directly from [Cesanta](https://mongoose.ws/licensing/).
+The bundled [Mongoose](https://github.com/cesanta/mongoose) library is
+dual-licensed under **GPL-2.0** or a commercial license by Cesanta Software
+Limited. If you intend to use this project in a proprietary/commercial product,
+you must get a commercial license for Mongoose directly from 
+[Cesanta](https://mongoose.ws/licensing/).
 
 ## Building
 
@@ -78,8 +88,11 @@ int main() {
 }
 ```
 
-See the [`example/`](example/) folder for a complete runnable example demonstrating lambdas, free functions, member function handlers, and parameterised routes.
+See the [`example/`](example/) folder for a complete runnable example
+demonstrating lambdas, free functions, member function handlers, and
+parameterized routes.
 
 ## Contributing
 
-Pull requests and issues are welcome. Feel free to open an issue to report a bug, request a feature, or ask a question.
+Pull requests and issues are welcome. Feel free to open an issue to report a
+bug, request a feature, or ask a question.
