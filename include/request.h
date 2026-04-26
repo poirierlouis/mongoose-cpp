@@ -13,6 +13,7 @@ class request {
   std::vector<mg_str> m_groups;
 
  public:
+  explicit request(mg_http_message* msg);
   explicit request(mg_http_message* msg, std::vector<mg_str> groups);
 
   request(const request&) = delete;

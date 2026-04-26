@@ -27,6 +27,7 @@ class server {
   void handle(mg_connection* conn, int ev, void* ev_data);
 
   void handle_http(mg_connection* conn, mg_http_message* msg);
+  void handle_http_wakeup(mg_connection* conn, const mg_str* data);
 
   [[nodiscard]] static size_t count_groups(std::string_view path);
 
@@ -51,7 +52,7 @@ class server {
   template <typename F>
   void register_http(const std::string& path, F&& callback) {
     m_http_listeners.insert_or_assign(
-        path, std::make_unique<http::lambda_event_listener<F>>(
+        path, std::make_unique<http::lambda_event_listener<F, http::response>>(
                   std::forward<F>(callback), count_groups(path)));
   }
 
@@ -61,7 +62,7 @@ class server {
       void (T::*callback)(const http::request&,
                           const std::shared_ptr<http::response>&)) {
     m_http_listeners.insert_or_assign(
-        path, std::make_unique<http::klass_event_listener<T>>(
+        path, std::make_unique<http::klass_event_listener<T, http::response>>(
                   target, callback, count_groups(path)));
   }
 
@@ -69,14 +70,15 @@ class server {
                      void (*callback)(const http::request&,
                                       const std::shared_ptr<http::response>&)) {
     m_http_listeners.insert_or_assign(
-        path, std::make_unique<http::fn_event_listener>(callback,
-                                                        count_groups(path)));
+        path, std::make_unique<http::fn_event_listener<http::response>>(
+                  callback, count_groups(path)));
   }
 
   template <typename F>
   void register_http_fallback(F&& callback) {
-    m_http_fallback = std::make_unique<http::lambda_event_listener<F>>(
-        std::forward<F>(callback, 0));
+    m_http_fallback =
+        std::make_unique<http::lambda_event_listener<F, http::response>>(
+            std::forward<F>(callback), 0);
   }
 
   template <typename T>
@@ -84,12 +86,42 @@ class server {
       T* target, void (T::*callback)(const http::request&,
                                      const std::shared_ptr<http::response>&)) {
     m_http_fallback =
-        std::make_unique<http::klass_event_listener<T>>(target, callback, 0);
+        std::make_unique<http::klass_event_listener<T, http::response>>(
+            target, callback, 0);
   }
 
   void register_http_fallback(void (*callback)(
       const http::request&, const std::shared_ptr<http::response>&)) {
-    m_http_fallback = std::make_unique<http::fn_event_listener>(callback, 0);
+    m_http_fallback =
+        std::make_unique<http::fn_event_listener<http::response>>(callback, 0);
+  }
+
+  template <typename F>
+  void register_async_http(const std::string& path, F&& callback) {
+    m_http_listeners.insert_or_assign(
+        path,
+        std::make_unique<http::lambda_event_listener<F, http::async_response>>(
+            std::forward<F>(callback), count_groups(path)));
+  }
+
+  template <typename T>
+  void register_async_http(
+      const std::string& path, T* target,
+      void (T::*callback)(const http::request&,
+                          const std::shared_ptr<http::async_response>&)) {
+    m_http_listeners.insert_or_assign(
+        path,
+        std::make_unique<http::klass_event_listener<T, http::async_response>>(
+            target, callback, count_groups(path)));
+  }
+
+  void register_async_http(
+      const std::string& path,
+      void (*callback)(const http::request&,
+                       const std::shared_ptr<http::async_response>&)) {
+    m_http_listeners.insert_or_assign(
+        path, std::make_unique<http::fn_event_listener<http::async_response>>(
+                  callback, count_groups(path)));
   }
 
   void poll(int ms = 0);

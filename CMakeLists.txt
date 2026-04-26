@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_library(mongoose_cpp STATIC
         vendors/mongoose/mongoose.c
+        src/async_response.cpp
         src/request.cpp
         src/response.cpp
         src/server.cpp
