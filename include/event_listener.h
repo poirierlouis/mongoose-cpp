@@ -44,7 +44,8 @@ class klass_event_listener : public event_listener {
  public:
   explicit klass_event_listener(
       T* target,
-      void (T::*callback)(const request&, const std::shared_ptr<response>&), const size_t groups)
+      void (T::*callback)(const request&, const std::shared_ptr<response>&),
+      const size_t groups)
       : event_listener(groups), m_target(target), m_callback(callback) {}
   ~klass_event_listener() override = default;
 
@@ -59,7 +60,8 @@ class fn_event_listener : public event_listener {
 
  public:
   explicit fn_event_listener(void (*callback)(const request&,
-                                              const std::shared_ptr<response>&), const size_t groups)
+                                              const std::shared_ptr<response>&),
+                             const size_t groups)
       : event_listener(groups), m_callback(callback) {}
   ~fn_event_listener() override = default;
 
