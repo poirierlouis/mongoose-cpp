@@ -1,9 +1,10 @@
+#include "server.h"
+
 #include <functional>
 #include <memory>
 
 #include "event_listener.h"
 #include "request.h"
-#include "server.h"
 
 namespace mg {
 void event_manager_handler(mg_connection* conn, const int ev, void* ev_data) {
@@ -16,11 +17,12 @@ server::server() { mg_mgr_init(&m_mgr); }
 server::~server() { mg_mgr_free(&m_mgr); }
 
 bool server::listen(const std::string& host) {
-  return mg_http_listen(&m_mgr, host.c_str(), &event_manager_handler, this) != nullptr;
+  return mg_http_listen(&m_mgr, host.c_str(), &event_manager_handler, this) !=
+         nullptr;
 }
 
-bool server::listen(const std::string& protocol,
-                           const std::string& interface, const uint16_t port) {
+bool server::listen(const std::string& protocol, const std::string& interface,
+                    const uint16_t port) {
   const auto host = protocol + "://" + interface + ":" + std::to_string(port);
   return listen(host);
 }
