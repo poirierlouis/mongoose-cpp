@@ -78,14 +78,17 @@ void server::handle_http(mg_connection* conn, mg_http_message* msg) {
 }
 
 void server::handle_http_wakeup(mg_connection* conn, const mg_str* data) {
-  if (!data || !data->buf || data->len != sizeof(http::async_response::payload*)) {
+  if (!data || !data->buf ||
+      data->len != sizeof(http::async_response::payload*)) {
     mg_http_reply(conn, 500, nullptr, "%s\n", "Internal Server Error");
     return;
   }
 
   // FIXME: memory leak when remote close connection
-  const auto payload = *reinterpret_cast<http::async_response::payload**>(data->buf);
-  mg_http_reply(conn, payload->code, payload->headers.c_str(), "%s\n", payload->body.c_str());
+  const auto payload =
+      *reinterpret_cast<http::async_response::payload**>(data->buf);
+  mg_http_reply(conn, payload->code, payload->headers.c_str(), "%s\n",
+                payload->body.c_str());
   delete payload;
 }
 

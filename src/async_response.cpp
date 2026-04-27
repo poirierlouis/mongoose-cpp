@@ -8,7 +8,8 @@ void async_response::send(const status_code code) const {
   async_response::send(static_cast<int>(code));
 }
 
-void async_response::send(const status_code code, const std::string& body) const {
+void async_response::send(const status_code code,
+                          const std::string& body) const {
   async_response::send(static_cast<int>(code), body);
 }
 
