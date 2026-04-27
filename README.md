@@ -96,3 +96,8 @@ parameterized routes.
 
 Pull requests and issues are welcome. Feel free to open an issue to report a
 bug, request a feature, or ask a question.
+
+### Code formatting
+
+This project uses `clang-format` to maintain a consistent code style. It is
+derived from Google C++ style.
