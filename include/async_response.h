@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_EXAMPLE_ASYNC_RESPONSE_H
-#define MONGOOSE_CPP_EXAMPLE_ASYNC_RESPONSE_H
+#ifndef MONGOOSE_CPP_ASYNC_RESPONSE_H
+#define MONGOOSE_CPP_ASYNC_RESPONSE_H
 
 #include <mongoose.h>
 
@@ -55,4 +55,4 @@ class async_response : public response {
 };
 }  // namespace mg::http
 
-#endif  // MONGOOSE_CPP_EXAMPLE_ASYNC_RESPONSE_H
+#endif  // MONGOOSE_CPP_ASYNC_RESPONSE_H
