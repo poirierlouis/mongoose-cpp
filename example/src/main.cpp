@@ -23,18 +23,26 @@ class example {
 
 std::atomic_bool is_running{true};
 
-void signal_handler(int) { is_running = false; }
+void signal_handler(int) {
+  std::cout << "[mg::server] Shutting down..." << '\n';
+  is_running = false;
+}
 
 int main(int, char**) {
   std::signal(SIGINT, &signal_handler);
 
-  example ex;
-
-  mg::server server;
+  mg::server server(
+      [](const std::string_view message) {
+        std::cout << "[mg::server] " << message;
+      },
+      MG_LL_DEBUG);
   if (!server.listen("http://127.0.0.1:4200")) {
-    std::cerr << "Failed to listen on http://127.0.0.1:4200" << '\n';
+    std::cerr << "[mg::server] Failed to listen on http://127.0.0.1:4200"
+              << '\n';
     return 1;
   }
+
+  example ex;
   server.register_http("/c", &simple_handler);
   server.register_http("/class", &ex, &example::simple);
   server.register_http(
