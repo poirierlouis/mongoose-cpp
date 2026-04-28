@@ -7,22 +7,26 @@ void response::set_header(std::string name, std::string value) {
   m_headers[std::move(name)] = std::move(value);
 }
 
-void response::send(const status_code code) const {
-  send(static_cast<int>(code));
-}
+void response::send(const status_code code) { send(static_cast<int>(code)); }
 
-void response::send(const status_code code, const std::string& body) const {
+void response::send(const status_code code, const std::string& body) {
   send(static_cast<int>(code), body);
 }
 
-void response::send(const int code) const {
-  const auto headers = format_headers();
-  mg_http_reply(m_conn, code, headers.c_str(), "\n");
+void response::send_json(status_code code, const std::string& body) {
+  send_json(static_cast<int>(code), body);
 }
 
-void response::send(const int code, const std::string& body) const {
+void response::send(const int code) { send(code, ""); }
+
+void response::send(const int code, const std::string& body) {
   const auto headers = format_headers();
   mg_http_reply(m_conn, code, headers.c_str(), "%s\n", body.c_str());
+}
+
+void response::send_json(const int code, const std::string& body) {
+  set_header("Content-Type", "application/json");
+  send(code, body);
 }
 
 std::string response::format_headers() const {
@@ -32,6 +36,9 @@ std::string response::format_headers() const {
     headers.append(": ");
     headers.append(value);
     headers.append("\r\n");
+  }
+  if (headers.empty()) {
+    headers.append("Content-Type: text/plain\r\n");
   }
   return headers;
 }
