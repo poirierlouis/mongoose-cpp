@@ -3,6 +3,7 @@
 #include <csignal>
 #include <iostream>
 #include <mongoose-cpp.hpp>
+#include <thread>
 
 using namespace mg::http;
 
@@ -45,6 +46,16 @@ int main(int, char**) {
         res->send(status_code::ok,
                   std::format("I'm capturing one group for API endpoints: {}",
                               req.get_param(0)));
+      });
+  server.register_async_http(
+      "/async", [](const request&, const std::shared_ptr<async_response>& res) {
+        std::thread thread([res] {
+          std::this_thread::sleep_for(std::chrono::seconds(5));
+          res->send(status_code::ok,
+                    "I'm an async callback with 5 seconds of delay.");
+        });
+
+        thread.detach();
       });
   while (is_running) {
     server.poll(100);

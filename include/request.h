@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_HTTP_REQUEST_H
-#define MONGOOSE_CPP_HTTP_REQUEST_H
+#ifndef MONGOOSE_CPP_REQUEST_H
+#define MONGOOSE_CPP_REQUEST_H
 
 #include <mongoose.h>
 
@@ -13,6 +13,7 @@ class request {
   std::vector<mg_str> m_groups;
 
  public:
+  explicit request(mg_http_message* msg);
   explicit request(mg_http_message* msg, std::vector<mg_str> groups);
 
   request(const request&) = delete;
@@ -39,4 +40,4 @@ class request {
 };
 }  // namespace mg::http
 
-#endif  // MONGOOSE_CPP_HTTP_REQUEST_H
+#endif  // MONGOOSE_CPP_REQUEST_H

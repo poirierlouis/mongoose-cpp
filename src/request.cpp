@@ -1,6 +1,8 @@
 #include "request.h"
 
 namespace mg::http {
+request::request(mg_http_message* msg) : m_msg(msg) {}
+
 request::request(mg_http_message* msg, std::vector<mg_str> groups)
     : m_msg(msg), m_groups(std::move(groups)) {}
 
