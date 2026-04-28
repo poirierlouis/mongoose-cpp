@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "event_listener.h"
+#include "logger_listener.h"
 
 #ifdef poll
 #undef poll
@@ -15,13 +16,23 @@
 
 namespace mg {
 void event_manager_handler(mg_connection* conn, int ev, void* ev_data);
+void event_manager_logger(char ch, void* param);
 
 class server {
   friend void event_manager_handler(mg_connection*, int, void*);
+  friend void event_manager_logger(char, void*);
+
+  struct logger {
+    std::string buffer;
+    size_t offset{0};
+    std::unique_ptr<logger_listener> listener;
+  };
 
   std::shared_ptr<mg_mgr> m_mgr{};
   bool m_wakeup{false};
   size_t m_counter{0};
+
+  logger m_logger{};
 
   std::unordered_map<std::string, std::unique_ptr<http::event_listener>>
       m_http_listeners{};
@@ -31,6 +42,9 @@ class server {
       unsigned long,
       std::unordered_map<size_t, std::shared_ptr<http::async_response>>>
       m_http_pending{};
+
+  void register_logger(int level, size_t size);
+  void setup();
 
   void handle(mg_connection* conn, int ev, void* ev_data);
   void handle_http_poll(mg_connection* conn);
@@ -42,6 +56,33 @@ class server {
 
  public:
   server();
+  explicit server(int level);
+
+  template <typename F>
+  explicit server(F&& callback, const int level = MG_LL_DEBUG,
+                  const size_t size = 8192) {
+    m_logger.listener =
+        std::make_unique<lambda_logger_listener<F>>(std::forward<F>(callback));
+    register_logger(level, size);
+    setup();
+  }
+
+  template <typename T>
+  explicit server(T* target, void (T::*callback)(std::string_view),
+                  const int level = MG_LL_DEBUG, const size_t size = 8192) {
+    m_logger.listener =
+        std::make_unique<klass_logger_listener<T>>(target, callback);
+    register_logger(level, size);
+    setup();
+  }
+
+  explicit server(void (*callback)(std::string_view),
+                  const int level = MG_LL_DEBUG, const size_t size = 8192) {
+    m_logger.listener = std::make_unique<fn_logger_listener>(callback);
+    register_logger(level, size);
+    setup();
+  }
+
   ~server() = default;
 
   server(const server&) = delete;

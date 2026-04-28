@@ -3,6 +3,7 @@
 
 #include "async_response.h"
 #include "event_listener.h"
+#include "logger_listener.h"
 #include "request.h"
 #include "response.h"
 #include "server.h"
