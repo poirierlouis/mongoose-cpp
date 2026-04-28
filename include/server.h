@@ -106,7 +106,9 @@ class server {
   template <typename F>
   void register_async_http(const std::string& path, F&& callback) {
     if (!m_wakeup) {
-      // TODO: log error
+      MG_ERROR(
+          ("Failed to register asynchronous HTTP handler: async mode is "
+           "disabled"));
       return;
     }
 
@@ -122,7 +124,9 @@ class server {
       void (T::*callback)(const http::request&,
                           const std::shared_ptr<http::async_response>&)) {
     if (!m_wakeup) {
-      // TODO: log error
+      MG_ERROR(
+          ("Failed to register asynchronous HTTP handler: async mode is "
+           "disabled"));
       return;
     }
 
@@ -137,7 +141,9 @@ class server {
       void (*callback)(const http::request&,
                        const std::shared_ptr<http::async_response>&)) {
     if (!m_wakeup) {
-      // TODO: log error
+      MG_ERROR(
+          ("Failed to register asynchronous HTTP handler: async mode is "
+           "disabled"));
       return;
     }
 
