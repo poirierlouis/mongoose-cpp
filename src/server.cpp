@@ -25,7 +25,9 @@ server::server()
             delete mgr;
           }) {
   m_wakeup = mg_wakeup_init(m_mgr.get());
-  // TODO: log error
+  if (!m_wakeup) {
+    MG_ERROR(("Failed to initialize asynchronous mode"));
+  }
 }
 
 bool server::listen(const std::string& host) {
@@ -117,7 +119,7 @@ void server::handle_http(mg_connection* conn, mg_http_message* msg) {
 void server::handle_http_wakeup(mg_connection* conn, const mg_str* data) {
   const auto it_conn = m_http_pending.find(conn->id);
   if (it_conn == m_http_pending.end()) {
-    // TODO: log error
+    MG_ERROR(("HTTP connection %d not found", conn->id));
     mg_http_reply(conn, http::internal_server_error::k_code,
                   http::internal_server_error::k_header,
                   http::internal_server_error::k_body);
@@ -128,7 +130,7 @@ void server::handle_http_wakeup(mg_connection* conn, const mg_str* data) {
   auto& responses = it_conn->second;
   const auto it = responses.find(id);
   if (it == responses.end()) {
-    // TODO: log error
+    MG_ERROR(("HTTP response %zu not found for connection %d", id, conn->id));
     mg_http_reply(conn, http::internal_server_error::k_code,
                   http::internal_server_error::k_header,
                   http::internal_server_error::k_body);

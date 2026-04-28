@@ -45,15 +45,12 @@ class server {
   ~server() = default;
 
   server(const server&) = delete;
-
   server& operator=(const server&) = delete;
 
   server(server&&) noexcept = delete;
-
   server& operator=(server&&) = delete;
 
   bool listen(const std::string& host);
-
   bool listen(const std::string& protocol, const std::string& interface,
               uint16_t port);
 
