@@ -45,9 +45,12 @@ int main(int, char**) {
   example ex;
   server.register_http("/c", &simple_handler);
   server.register_http("/class", &ex, &example::simple);
+  uint64_t counter{0};
   server.register_http(
-      "/lambda", [](const request&, const std::shared_ptr<response>& res) {
-        res->send(status_code::ok, "I'm a lambda callback.");
+      "/lambda",
+      [&counter](const request&, const std::shared_ptr<response>& res) {
+        res->send(status_code::ok,
+                  std::format("I'm a lambda callback ({} calls).", ++counter));
       });
   server.register_http(
       "/api/#", [](const request& req, const std::shared_ptr<response>& res) {
@@ -55,12 +58,16 @@ int main(int, char**) {
                   std::format("I'm capturing one group for API endpoints: {}",
                               req.get_param(0)));
       });
+
+  std::atomic_uint64_t async_counter{0};
   server.register_async_http(
-      "/async", [](const request&, const std::shared_ptr<async_response>& res) {
-        std::thread thread([res] {
+      "/async", [&async_counter](const request&,
+                                 const std::shared_ptr<async_response>& res) {
+        std::thread thread([&async_counter, res] {
           std::this_thread::sleep_for(std::chrono::seconds(5));
+          auto count = async_counter.fetch_add(1);
           res->send(status_code::ok,
-                    "I'm an async callback with 5 seconds of delay.");
+                    std::format("I'm an async callback ({} calls).", count));
         });
 
         thread.detach();
