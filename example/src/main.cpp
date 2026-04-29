@@ -1,6 +1,8 @@
 #include <atomic>
 #include <chrono>
 #include <csignal>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <mongoose-cpp.hpp>
 #include <thread>
@@ -28,6 +30,16 @@ void signal_handler(int) {
   is_running = false;
 }
 
+std::optional<std::string> read_file(const std::filesystem::path& path) {
+  std::ifstream file(path);
+  if (!file.is_open()) {
+    return std::nullopt;
+  }
+
+  return std::string(std::istreambuf_iterator(file),
+                     std::istreambuf_iterator<char>());
+}
+
 int main(int, char**) {
   std::signal(SIGINT, &signal_handler);
 
@@ -36,9 +48,29 @@ int main(int, char**) {
         std::cout << "[mg::server] " << message;
       },
       MG_LL_DEBUG);
-  if (!server.listen("http://127.0.0.1:4200")) {
-    std::cerr << "[mg::server] Failed to listen on http://127.0.0.1:4200"
-              << '\n';
+
+#ifdef HAS_TLS
+  const auto cert = read_file(std::filesystem::absolute("cert.pem"));
+  if (!cert) {
+    std::cerr << "[mg::server] Failed to load public certificate" << '\n';
+    return 1;
+  }
+
+  const auto key = read_file(std::filesystem::absolute("key.pem"));
+  if (!key) {
+    std::cerr << "[mg::server] Failed to load private key" << '\n';
+    return 1;
+  }
+
+  server.use_tls(cert.value(), key.value());
+
+  constexpr auto host = "https://127.0.0.1:4200";
+#else
+  constexpr auto host = "http://127.0.0.1:4200";
+#endif
+
+  if (!server.listen(host)) {
+    std::cerr << "[mg::server] Failed to listen on " << host << '\n';
     return 1;
   }
 

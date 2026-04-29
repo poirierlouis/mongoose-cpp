@@ -30,6 +30,11 @@ server::server(const int level) {
   setup();
 }
 
+void server::use_tls(const std::string& cert, const std::string& key) {
+  m_tls_cert = mg_str_n(cert.c_str(), cert.size());
+  m_tls_key = mg_str_n(key.c_str(), key.size());
+}
+
 bool server::listen(const std::string& host) {
   return mg_http_listen(m_mgr.get(), host.c_str(), &event_manager_handler,
                         this) != nullptr;
@@ -75,6 +80,8 @@ void server::setup() {
 void server::handle(mg_connection* conn, const int ev, void* ev_data) {
   if (ev == MG_EV_POLL) {
     handle_http_poll(conn);
+  } else if (ev == MG_EV_ACCEPT) {
+    handle_http_secure(conn);
   } else if (ev == MG_EV_HTTP_MSG) {
     handle_http(conn, static_cast<mg_http_message*>(ev_data));
   } else if (ev == MG_EV_WAKEUP) {
@@ -101,6 +108,15 @@ void server::handle_http_poll(mg_connection* conn) {
       ++it;
     }
   }
+}
+
+void server::handle_http_secure(mg_connection* conn) const {
+  if (!conn->is_tls || m_tls_cert.len == 0 || m_tls_key.len == 0) {
+    return;
+  }
+
+  const mg_tls_opts opts{.cert = m_tls_cert, .key = m_tls_key};
+  mg_tls_init(conn, &opts);
 }
 
 void server::handle_http(mg_connection* conn, mg_http_message* msg) {

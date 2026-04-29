@@ -30,6 +30,8 @@ class server {
 
   std::shared_ptr<mg_mgr> m_mgr{};
   bool m_wakeup{false};
+  mg_str m_tls_cert{};
+  mg_str m_tls_key{};
   size_t m_counter{0};
 
   logger m_logger{};
@@ -48,6 +50,7 @@ class server {
 
   void handle(mg_connection* conn, int ev, void* ev_data);
   void handle_http_poll(mg_connection* conn);
+  void handle_http_secure(mg_connection* conn) const;
   void handle_http(mg_connection* conn, mg_http_message* msg);
   void handle_http_wakeup(mg_connection* conn, const mg_str* data);
   void handle_http_close(const mg_connection* conn);
@@ -90,6 +93,8 @@ class server {
 
   server(server&&) noexcept = delete;
   server& operator=(server&&) = delete;
+
+  void use_tls(const std::string& cert, const std::string& key);
 
   bool listen(const std::string& host);
   bool listen(const std::string& protocol, const std::string& interface,
