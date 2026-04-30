@@ -17,25 +17,17 @@ class request {
   explicit request(mg_http_message* msg, std::vector<mg_str> groups);
 
   request(const request&) = delete;
-
   request& operator=(const request&) = delete;
 
   request(request&&) noexcept = default;
-
   request& operator=(request&&) = default;
 
   [[nodiscard]] std::string_view method() const;
-
   [[nodiscard]] std::string_view uri() const;
-
   [[nodiscard]] std::string_view get_param(size_t index) const;
-
   [[nodiscard]] std::string_view query() const;
-
   [[nodiscard]] std::string_view version() const;
-
   [[nodiscard]] std::string_view get_header(const std::string& name) const;
-
   [[nodiscard]] std::string_view body() const;
 };
 }  // namespace mg::http
