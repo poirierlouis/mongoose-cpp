@@ -1,10 +1,10 @@
-#include <../../src/mongoose-cpp.hpp>
 #include <atomic>
 #include <chrono>
 #include <csignal>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <mongoose-cpp.hpp>
 #include <thread>
 
 using namespace mg::http;
@@ -60,7 +60,7 @@ int main(int, char**) {
       },
       MG_LL_DEBUG);
 
-#ifdef HAS_TLS
+#ifdef MGPP_OPENSSL
   const auto ca = read_file(std::filesystem::absolute("root.pem"));
   if (!ca) {
     std::cerr << "[mg::server] Failed to load server's root key" << '\n';
@@ -90,7 +90,7 @@ int main(int, char**) {
     return 1;
   }
 
-#ifdef HAS_TLS
+#ifdef MGPP_OPENSSL
   web->use_tls(ca.value(), cert.value(), key.value());
 #endif
 
