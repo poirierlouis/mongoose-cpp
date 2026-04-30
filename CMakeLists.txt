@@ -14,16 +14,20 @@ string(TOLOWER "${MGPP_TLS}" MGPP_TLS_LOWER)
 # Static library
 #
 add_library(${PROJECT_NAME} STATIC
-        src/async_response.cpp
-        src/request.cpp
-        src/response.cpp
+        src/web/async_response.cpp
+        src/web/request.cpp
+        src/web/response.cpp
+        src/web/web_endpoint.cpp
+
+        src/endpoint.cpp
         src/server.cpp
 
         vendors/mongoose/mongoose.c
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-        include/
+        src/
+        src/web/
 
         vendors/mongoose/
 )

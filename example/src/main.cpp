@@ -1,10 +1,10 @@
+#include <../../src/mongoose-cpp.hpp>
 #include <atomic>
 #include <chrono>
 #include <csignal>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <mongoose-cpp.hpp>
 #include <thread>
 
 using namespace mg::http;
@@ -62,37 +62,50 @@ int main(int, char**) {
     return 1;
   }
 
-  server.use_tls(cert.value(), key.value());
-
   constexpr auto host = "https://127.0.0.1:4200";
 #else
   constexpr auto host = "http://127.0.0.1:4200";
 #endif
 
-  if (!server.listen(host)) {
+  const auto web = server.listen_web(host);
+  if (!web) {
     std::cerr << "[mg::server] Failed to listen on " << host << '\n';
     return 1;
   }
 
+#ifdef HAS_TLS
+  web->use_tls(cert.value(), key.value());
+#endif
+
   example ex;
-  server.register_http("/c", &simple_handler);
-  server.register_http("/class", &ex, &example::simple);
   uint64_t counter{0};
-  server.register_http(
-      "/lambda",
-      [&counter](const request&, const std::shared_ptr<response>& res) {
-        res->send(status_code::ok,
-                  std::format("I'm a lambda callback ({} calls).", ++counter));
-      });
-  server.register_http(
-      "/api/#", [](const request& req, const std::shared_ptr<response>& res) {
-        res->send(status_code::ok,
-                  std::format("I'm capturing one group for API endpoints: {}",
-                              req.get_param(0)));
+  web->on_request("/c", &simple_handler)
+      .on_request(
+          "/class",
+          [&ex](const request& req, const std::shared_ptr<response>& res) {
+            ex.simple(req, res);
+          })
+      .on_request(
+          "/lambda",
+          [&counter](const request&, const std::shared_ptr<response>& res) {
+            res->send(
+                status_code::ok,
+                std::format("I'm a lambda callback ({} calls).", ++counter));
+          })
+      .on_request(
+          "/api/#",
+          [](const request& req, const std::shared_ptr<response>& res) {
+            res->send(
+                status_code::ok,
+                std::format("I'm capturing one group for API endpoints: {}",
+                            req.get_param(0)));
+          })
+      .on_fallback([](const request&, const std::shared_ptr<response>& res) {
+        res->send(status_code::not_found, "404 Not Found");
       });
 
   std::atomic_uint64_t async_counter{0};
-  server.register_async_http(
+  web->on_async_request(
       "/async", [&async_counter](const request&,
                                  const std::shared_ptr<async_response>& res) {
         std::thread thread([&async_counter, res] {
@@ -104,8 +117,10 @@ int main(int, char**) {
 
         thread.detach();
       });
+
   while (is_running) {
     server.poll(100);
   }
+
   return 0;
 }

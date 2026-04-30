@@ -8,7 +8,7 @@
 #include "response.h"
 
 namespace mg {
-class server;
+class web_endpoint;
 }
 
 namespace mg::http {
@@ -34,7 +34,7 @@ class async_response : public response {
   void mark_completed();
   void mark_failed();
 
-  friend class mg::server;
+  friend class mg::web_endpoint;
 
  public:
   explicit async_response(unsigned long conn, std::weak_ptr<mg_mgr> mgr,
