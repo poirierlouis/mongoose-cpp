@@ -14,6 +14,7 @@ string(TOLOWER "${MGPP_TLS}" MGPP_TLS_LOWER)
 # Static library
 #
 add_library(${PROJECT_NAME} STATIC
+        src/web/async_request.cpp
         src/web/async_response.cpp
         src/web/request.cpp
         src/web/response.cpp

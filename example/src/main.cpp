@@ -40,6 +40,16 @@ std::optional<std::string> read_file(const std::filesystem::path& path) {
                      std::istreambuf_iterator<char>());
 }
 
+std::optional<int> to_int(const std::string_view str) {
+  int value;
+  const auto [ptr, ec] =
+      std::from_chars(str.data(), str.data() + str.size(), value);
+  if (ec == std::errc{}) {
+    return value;
+  }
+  return std::nullopt;
+}
+
 int main(int, char**) {
   std::signal(SIGINT, &signal_handler);
 
@@ -104,16 +114,20 @@ int main(int, char**) {
         res->send(status_code::not_found, "404 Not Found");
       });
 
-  std::atomic_uint64_t async_counter{0};
+  std::atomic_uint64_t async_counter{1};
   web->on_async_request(
-      "/async", [&async_counter](const request&,
-                                 const std::shared_ptr<async_response>& res) {
-        std::thread thread([&async_counter, res] {
-          std::this_thread::sleep_for(std::chrono::seconds(5));
-          auto count = async_counter.fetch_add(1);
-          res->send(status_code::ok,
-                    std::format("I'm an async callback ({} calls).", count));
-        });
+      "/async/?", [&async_counter](const request& req,
+                                   const std::shared_ptr<async_response>& res) {
+        std::thread thread(
+            [&async_counter, async_req = std::move(req.to_async()), res] {
+              const int sleep = to_int(async_req->get_param(0)).value_or(5);
+              std::this_thread::sleep_for(std::chrono::seconds(sleep));
+
+              auto count = async_counter.fetch_add(1);
+              res->send(status_code::ok,
+                        std::format("I'm an async {} callback ({} calls).",
+                                    async_req->method(), count));
+            });
 
         thread.detach();
       });

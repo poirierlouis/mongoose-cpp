@@ -1,29 +1,28 @@
-#ifndef MONGOOSE_CPP_REQUEST_H
-#define MONGOOSE_CPP_REQUEST_H
+#ifndef MONGOOSE_CPP_ASYNC_REQUEST_H
+#define MONGOOSE_CPP_ASYNC_REQUEST_H
 
 #include <mongoose.h>
 
-#include <memory>
 #include <string>
 #include <string_view>
 #include <vector>
 
-#include "async_request.h"
-
 namespace mg::http {
-class request {
-  mg_http_message* m_msg;
+class async_request {
+  mg_http_message m_msg{};
   std::vector<mg_str> m_groups;
 
  public:
-  explicit request(mg_http_message* msg);
-  explicit request(mg_http_message* msg, std::vector<mg_str> groups);
+  explicit async_request(const mg_http_message* msg);
+  explicit async_request(const mg_http_message* msg,
+                         std::vector<mg_str> groups);
+  ~async_request();
 
-  request(const request&) = delete;
-  request& operator=(const request&) = delete;
+  async_request(const async_request&) = delete;
+  async_request& operator=(const async_request&) = delete;
 
-  request(request&&) noexcept = default;
-  request& operator=(request&&) = default;
+  async_request(async_request&&) noexcept = delete;
+  async_request& operator=(async_request&&) = delete;
 
   [[nodiscard]] std::string_view method() const;
   [[nodiscard]] std::string_view uri() const;
@@ -32,9 +31,7 @@ class request {
   [[nodiscard]] std::string_view version() const;
   [[nodiscard]] std::string_view get_header(const std::string& name) const;
   [[nodiscard]] std::string_view body() const;
-
-  [[nodiscard]] std::unique_ptr<async_request> to_async() const;
 };
 }  // namespace mg::http
 
-#endif  // MONGOOSE_CPP_REQUEST_H
+#endif  // MONGOOSE_CPP_ASYNC_REQUEST_H
