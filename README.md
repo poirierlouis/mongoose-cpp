@@ -71,7 +71,8 @@ int main() {
     // Parameterised route — captures the path segment after /user/
     web->on_request("/user/#", [](const request& req,
                                   const std::shared_ptr<response>& res) {
-        res->send(status_code::ok, std::format("user: {}", req.get_param(0)));
+        const auto param = req.get_param(0).value_or("");
+        res->send(status_code::ok, std::format("user: {}", param));
     });
 
     // Fallback / 404 handler

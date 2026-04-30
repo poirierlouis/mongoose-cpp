@@ -14,12 +14,11 @@ std::string_view request::uri() const {
   return {m_msg->uri.buf, m_msg->uri.len};
 }
 
-std::string_view request::get_param(const size_t index) const {
+std::optional<std::string_view> request::get_param(const size_t index) const {
   if (index >= m_groups.size()) {
-    // TODO: use std::optional
-    return {};
+    return std::nullopt;
   }
-  return {m_groups[index].buf, m_groups[index].len};
+  return std::string_view{m_groups[index].buf, m_groups[index].len};
 }
 
 std::string_view request::query() const {
@@ -30,13 +29,13 @@ std::string_view request::version() const {
   return {m_msg->proto.buf, m_msg->proto.len};
 }
 
-std::string_view request::get_header(const std::string& name) const {
+std::optional<std::string_view> request::get_header(
+    const std::string& name) const {
   const auto header = mg_http_get_header(m_msg, name.c_str());
   if (!header) {
-    // TODO: use std::optional
-    return {};
+    return std::nullopt;
   }
-  return {header->buf, header->len};
+  return std::string_view{header->buf, header->len};
 }
 
 std::string_view request::body() const {

@@ -105,10 +105,11 @@ int main(int, char**) {
       .on_request(
           "/api/#",
           [](const request& req, const std::shared_ptr<response>& res) {
+            const auto param = req.get_param(0).value_or("");
             res->send(
                 status_code::ok,
                 std::format("I'm capturing one group for API endpoints: {}",
-                            req.get_param(0)));
+                            param));
           })
       .on_fallback([](const request&, const std::shared_ptr<response>& res) {
         res->send(status_code::not_found, "404 Not Found");
@@ -120,7 +121,8 @@ int main(int, char**) {
                                    const std::shared_ptr<async_response>& res) {
         std::thread thread(
             [&async_counter, async_req = std::move(req.to_async()), res] {
-              const int sleep = to_int(async_req->get_param(0)).value_or(5);
+              const auto param = async_req->get_param(0).value_or("5");
+              const int sleep = to_int(param).value_or(5);
               std::this_thread::sleep_for(std::chrono::seconds(sleep));
 
               auto count = async_counter.fetch_add(1);

@@ -3,6 +3,7 @@
 
 #include <mongoose.h>
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -26,10 +27,11 @@ class async_request {
 
   [[nodiscard]] std::string_view method() const;
   [[nodiscard]] std::string_view uri() const;
-  [[nodiscard]] std::string_view get_param(size_t index) const;
+  [[nodiscard]] std::optional<std::string_view> get_param(size_t index) const;
   [[nodiscard]] std::string_view query() const;
   [[nodiscard]] std::string_view version() const;
-  [[nodiscard]] std::string_view get_header(const std::string& name) const;
+  [[nodiscard]] std::optional<std::string_view> get_header(
+      const std::string& name) const;
   [[nodiscard]] std::string_view body() const;
 };
 }  // namespace mg::http
