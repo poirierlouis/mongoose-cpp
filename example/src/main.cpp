@@ -10,7 +10,8 @@
 using namespace mg::http;
 
 void simple_handler(const request&, const std::shared_ptr<response>& res) {
-  res->send(status_code::ok, "I'm a raw function callback.");
+  res->send(status_code::im_a_teapot,
+            "What starts with T, ends with T, but only has T in?\nTeapot");
 }
 
 class example {
@@ -60,15 +61,21 @@ int main(int, char**) {
       MG_LL_DEBUG);
 
 #ifdef HAS_TLS
-  const auto cert = read_file(std::filesystem::absolute("cert.pem"));
-  if (!cert) {
-    std::cerr << "[mg::server] Failed to load public certificate" << '\n';
+  const auto ca = read_file(std::filesystem::absolute("root.pem"));
+  if (!ca) {
+    std::cerr << "[mg::server] Failed to load server's root key" << '\n';
     return 1;
   }
 
-  const auto key = read_file(std::filesystem::absolute("key.pem"));
+  const auto cert = read_file(std::filesystem::absolute("server.crt"));
+  if (!cert) {
+    std::cerr << "[mg::server] Failed to load server's certificate" << '\n';
+    return 1;
+  }
+
+  const auto key = read_file(std::filesystem::absolute("server.key"));
   if (!key) {
-    std::cerr << "[mg::server] Failed to load private key" << '\n';
+    std::cerr << "[mg::server] Failed to load server's key" << '\n';
     return 1;
   }
 
@@ -84,12 +91,12 @@ int main(int, char**) {
   }
 
 #ifdef HAS_TLS
-  web->use_tls(cert.value(), key.value());
+  web->use_tls(ca.value(), cert.value(), key.value());
 #endif
 
   example ex;
   uint64_t counter{0};
-  web->on_request("/c", &simple_handler)
+  web->on_request("/joke", &simple_handler)
       .on_request(
           "/class",
           [&ex](const request& req, const std::shared_ptr<response>& res) {
@@ -111,28 +118,77 @@ int main(int, char**) {
                 std::format("I'm capturing one group for API endpoints: {}",
                             param));
           })
+      .on_request(
+          "/cert",
+          [](const request& req, const std::shared_ptr<response>& res) {
+            if (const auto cert = req.get_tls_cert_info().lock()) {
+              res->send(
+                  status_code::ok,
+                  std::format("--- Client certificate ---\n"
+                              "Subject:{}\n"
+                              "Issuer:{}\n"
+                              "Serial Number:{}\n"
+                              "Not Before:{}\n"
+                              "Not After:{}\n"
+                              "Fingerprint:{}",
+                              cert->get_subject_name(), cert->get_issuer_name(),
+                              cert->get_serial_number(), cert->get_not_before(),
+                              cert->get_not_after(), cert->get_fingerprint()));
+            } else {
+              res->send(status_code::bad_request,
+                        "No client certificate provided");
+            }
+          })
       .on_fallback([](const request&, const std::shared_ptr<response>& res) {
         res->send(status_code::not_found, "404 Not Found");
       });
 
   std::atomic_uint64_t async_counter{1};
   web->on_async_request(
-      "/async/?", [&async_counter](const request& req,
-                                   const std::shared_ptr<async_response>& res) {
-        std::thread thread(
-            [&async_counter, async_req = std::move(req.to_async()), res] {
-              const auto param = async_req->get_param(0).value_or("5");
-              const int sleep = to_int(param).value_or(5);
-              std::this_thread::sleep_for(std::chrono::seconds(sleep));
+         "/async/cert",
+         [](const request& req, const std::shared_ptr<async_response>& res) {
+           std::thread thread([async_req = req.to_async(), res] {
+             std::this_thread::sleep_for(std::chrono::seconds(2));
 
-              auto count = async_counter.fetch_add(1);
-              res->send(status_code::ok,
-                        std::format("I'm an async {} callback ({} calls).",
-                                    async_req->method(), count));
-            });
+             if (const auto cert = async_req->get_tls_cert_info().lock()) {
+               res->send(status_code::ok,
+                         std::format(
+                             "--- Client certificate ---\n"
+                             "Subject:{}\n"
+                             "Issuer:{}\n"
+                             "Serial Number:{}\n"
+                             "Not Before:{}\n"
+                             "Not After:{}\n"
+                             "Fingerprint:{}",
+                             cert->get_subject_name(), cert->get_issuer_name(),
+                             cert->get_serial_number(), cert->get_not_before(),
+                             cert->get_not_after(), cert->get_fingerprint()));
+             } else {
+               res->send(status_code::bad_request,
+                         "No client certificate provided");
+             }
+           });
 
-        thread.detach();
-      });
+           thread.detach();
+         })
+      .on_async_request(
+          "/async/?",
+          [&async_counter](const request& req,
+                           const std::shared_ptr<async_response>& res) {
+            std::thread thread(
+                [&async_counter, async_req = std::move(req.to_async()), res] {
+                  const auto param = async_req->get_param(0).value_or("5");
+                  const int sleep = to_int(param).value_or(5);
+                  std::this_thread::sleep_for(std::chrono::seconds(sleep));
+
+                  auto count = async_counter.fetch_add(1);
+                  res->send(status_code::ok,
+                            std::format("I'm an async {} callback ({} calls).",
+                                        async_req->method(), count));
+                });
+
+            thread.detach();
+          });
 
   while (is_running) {
     server.poll(100);

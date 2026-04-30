@@ -2,11 +2,12 @@
 
 namespace mg::http {
 async_request::async_request(const mg_http_message* msg)
-    : async_request(msg, {}) {}
+    : async_request(msg, {}, {}) {}
 
 async_request::async_request(const mg_http_message* msg,
-                             std::vector<mg_str> groups)
-    : m_groups(std::move(groups)) {
+                             std::vector<mg_str> groups,
+                             std::weak_ptr<tls_cert_info> tls_cert_info)
+    : m_groups(std::move(groups)), m_tls_cert_info(std::move(tls_cert_info)) {
   m_msg.message = mg_strdup(msg->message);
 
   ptrdiff_t delta = m_msg.message.buf - msg->message.buf;
@@ -41,6 +42,10 @@ async_request::async_request(const mg_http_message* msg,
 }
 
 async_request::~async_request() { mg_free(m_msg.message.buf); }
+
+std::weak_ptr<tls_cert_info> async_request::get_tls_cert_info() const {
+  return m_tls_cert_info;
+}
 
 std::string_view async_request::method() const {
   return {m_msg.method.buf, m_msg.method.len};

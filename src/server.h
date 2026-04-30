@@ -17,6 +17,7 @@
 
 namespace mg {
 void event_manager_handler(mg_connection* conn, int ev, void* ev_data);
+void event_manager_context_handler(mg_connection* conn, int ev, void* ev_data);
 void event_manager_logger(char ch, void* param);
 
 class server {

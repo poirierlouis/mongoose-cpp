@@ -21,6 +21,7 @@ add_library(${PROJECT_NAME} STATIC
         src/web/web_endpoint.cpp
 
         src/endpoint.cpp
+        src/remote_context.cpp
         src/server.cpp
 
         vendors/mongoose/mongoose.c
@@ -49,10 +50,16 @@ if (MGPP_TLS_LOWER STREQUAL "builtin")
     endif ()
 
     message(STATUS "TLS enabled (builtin)")
-    #elseif (MGPP_TLS_LOWER STREQUAL "openssl")
-    #    TODO: find package and use
-    #
-    #    message(STATUS "TLS enabled (OpenSSL)")
+elseif (MGPP_TLS_LOWER STREQUAL "openssl")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC MG_TLS=MG_TLS_OPENSSL)
+
+    find_package(OpenSSL REQUIRED)
+
+    if (WIN32)
+        target_link_libraries(${PROJECT_NAME} PUBLIC OpenSSL::SSL OpenSSL::Crypto crypt32 secur32 ws2_32)
+    endif ()
+
+    message(STATUS "TLS enabled (OpenSSL)")
     #elseif (MGPP_TLS_LOWER STREQUAL "wolfssl")
     #    TODO: find package and use
     #

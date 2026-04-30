@@ -2,21 +2,38 @@
 
 #include <ranges>
 
+#include "remote_context.h"
+#include "server.h"
+
 namespace mg {
 web_endpoint::web_endpoint(std::weak_ptr<mg_mgr> mgr, std::string host)
     : endpoint(std::move(mgr), std::move(host)) {}
 
 web_endpoint::~web_endpoint() {
   if (m_tls_alloc) {
+    mg_free(m_tls_ca.buf);
     mg_free(m_tls_cert.buf);
     mg_free(m_tls_key.buf);
     m_tls_alloc = false;
   }
 }
 
+bool web_endpoint::is_mtls() const { return m_tls_ca.len > 0; }
+
 void web_endpoint::use_tls(const std::string& cert, const std::string& key) {
   const mg_str tls_cert = mg_str_n(cert.c_str(), cert.size());
   const mg_str tls_key = mg_str_n(key.c_str(), key.size());
+  m_tls_cert = mg_strdup(tls_cert);
+  m_tls_key = mg_strdup(tls_key);
+  m_tls_alloc = true;
+}
+
+void web_endpoint::use_tls(const std::string& ca, const std::string& cert,
+                           const std::string& key) {
+  const mg_str tls_ca = mg_str_n(ca.c_str(), ca.size());
+  const mg_str tls_cert = mg_str_n(cert.c_str(), cert.size());
+  const mg_str tls_key = mg_str_n(key.c_str(), key.size());
+  m_tls_ca = mg_strdup(tls_ca);
   m_tls_cert = mg_strdup(tls_cert);
   m_tls_key = mg_strdup(tls_key);
   m_tls_alloc = true;
@@ -28,13 +45,27 @@ void web_endpoint::use_tls(const std::string_view cert,
   m_tls_key = mg_str_n(key.data(), key.size());
 }
 
+void web_endpoint::use_tls(const std::string_view ca,
+                           const std::string_view cert,
+                           const std::string_view key) {
+  m_tls_ca = mg_str_n(ca.data(), ca.size());
+  m_tls_cert = mg_str_n(cert.data(), cert.size());
+  m_tls_key = mg_str_n(key.data(), key.size());
+}
+
 void web_endpoint::handle(mg_connection* conn, const int ev, void* ev_data) {
+  if (ev == MG_EV_ACCEPT) {
+    handle_secure(conn);
+    promote_context(conn);
+    return;
+  }
+
   switch (ev) {
     case MG_EV_POLL:
       handle_poll(conn);
       break;
-    case MG_EV_ACCEPT:
-      handle_secure(conn);
+    case MG_EV_TLS_HS:
+      setup_context(conn);
       break;
     case MG_EV_HTTP_MSG:
       handle_http_message(conn, static_cast<mg_http_message*>(ev_data));
@@ -74,18 +105,20 @@ void web_endpoint::handle_secure(mg_connection* conn) const {
     return;
   }
 
-  const mg_tls_opts opts{.cert = m_tls_cert, .key = m_tls_key};
+  const mg_tls_opts opts{.ca = m_tls_ca, .cert = m_tls_cert, .key = m_tls_key};
   mg_tls_init(conn, &opts);
 }
 
 void web_endpoint::handle_http_message(mg_connection* conn,
                                        mg_http_message* msg) {
+  const auto* context = static_cast<remote_context*>(conn->fn_data);
+
   for (const auto& [path, listener] : m_listeners) {
     const mg_str str = mg_str_n(path.c_str(), path.size());
     std::vector<mg_str> groups{listener->get_groups() + 1};
 
     if (mg_match(msg->uri, str, groups.data())) {
-      const http::request request(msg, std::move(groups));
+      const http::request request(msg, *context, std::move(groups));
       if (listener->is_async()) {
         const auto id = m_counter++;
         const auto res =
@@ -101,7 +134,7 @@ void web_endpoint::handle_http_message(mg_connection* conn,
   }
 
   if (m_fallback) {
-    const http::request request(msg);
+    const http::request request(msg, *context);
     if (m_fallback->is_async()) {
       const auto id = m_counter++;
       const auto res =
@@ -149,8 +182,14 @@ void web_endpoint::handle_wakeup(mg_connection* conn, const mg_str* data) {
 }
 
 void web_endpoint::handle_close(const mg_connection* conn) {
+  const auto dispose = [conn] {
+    const auto* context = static_cast<remote_context*>(conn->fn_data);
+    delete context;
+  };
+
   const auto& it = m_pending.find(conn->id);
   if (it == m_pending.end()) {
+    dispose();
     return;
   }
 
@@ -158,6 +197,19 @@ void web_endpoint::handle_close(const mg_connection* conn) {
     response->mark_failed();
   }
   m_pending.erase(it);
+
+  dispose();
+}
+
+void web_endpoint::promote_context(mg_connection* conn) {
+  auto* context = new remote_context(this, conn);
+  conn->fn = &event_manager_context_handler;
+  conn->fn_data = context;
+}
+
+void web_endpoint::setup_context(const mg_connection* conn) {
+  auto* context = static_cast<remote_context*>(conn->fn_data);
+  context->setup(conn);
 }
 
 size_t web_endpoint::count_groups(const std::string_view path) {

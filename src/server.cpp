@@ -4,12 +4,19 @@
 #include <memory>
 #include <ranges>
 
+#include "remote_context.h"
 #include "web/web_endpoint.h"
 
 namespace mg {
 void event_manager_handler(mg_connection* conn, const int ev, void* ev_data) {
   const auto endpoint = static_cast<mg::endpoint*>(conn->fn_data);
   endpoint->handle(conn, ev, ev_data);
+}
+
+void event_manager_context_handler(mg_connection* conn, const int ev,
+                                   void* ev_data) {
+  const auto context = static_cast<mg::remote_context*>(conn->fn_data);
+  context->handle(conn, ev, ev_data);
 }
 
 void event_manager_logger(const char ch, void* param) {
