@@ -2,12 +2,12 @@
 
 ![version: work in progress](https://img.shields.io/badge/version-work%20in%20progress-orange)
 
-A modern C++20 wrapper around the 
+A modern C++20 wrapper around the
 [Mongoose](https://github.com/cesanta/mongoose) embedded web server library.
 
-mongoose-cpp provides a clean, expressive API for building HTTP servers in C++, 
+mongoose-cpp provides a clean, expressive API for building HTTP servers in C++,
 hiding the C-level details of Mongoose behind thin, zero-overhead abstractions —
-while preserving full compatibility with embedded and resource-constrained 
+while preserving full compatibility with embedded and resource-constrained
 targets.
 
 ## Features
@@ -24,7 +24,7 @@ targets.
 - **C++ standard:** C++20
 - **Build system:** CMake 4.2+
 - **Compilers:** MSVC, GCC, Clang
-- **Platforms:** Linux, Windows, and any platform supported by Mongoose (ESP32, 
+- **Platforms:** Linux, Windows, and any platform supported by Mongoose (ESP32,
   STM32, ARM, RISC-V, etc.)
 - **Mongoose version:** 7.21
 
@@ -36,7 +36,7 @@ mongoose-cpp is licensed under the **GNU General Public License v2.0**
 The bundled [Mongoose](https://github.com/cesanta/mongoose) library is
 dual-licensed under **GPL-2.0** or a commercial license by Cesanta Software
 Limited. If you intend to use this project in a proprietary/commercial product,
-you must get a commercial license for Mongoose directly from 
+you must get a commercial license for Mongoose directly from
 [Cesanta](https://mongoose.ws/licensing/).
 
 ## Building
@@ -57,26 +57,26 @@ using namespace mg::http;
 
 int main() {
     mg::server server;
-    if (!server.listen("http://127.0.0.1:8080")) {
+    auto web = server.listen_web("http://0.0.0.0:80");
+    if (!web) {
         return 1;
     }
 
     // Lambda handler
-    server.register_http("/", [](const request& req,
-                                 const std::shared_ptr<response>& res) {
+    web->on_request("/", [](const request& req,
+                            const std::shared_ptr<response>& res) {
         res->send(status_code::ok, "Hello, world!");
     });
 
     // Parameterised route — captures the path segment after /user/
-    server.register_http("/user/#", [](const request& req,
-                                       const std::shared_ptr<response>& res) {
-        std::string body{req.get_param(0)};
-        res->send(status_code::ok, "User: " + body);
+    web->on_request("/user/#", [](const request& req,
+                                  const std::shared_ptr<response>& res) {
+        res->send(status_code::ok, std::format("user: {}", req.get_param(0)));
     });
 
     // Fallback / 404 handler
-    server.register_http_fallback([](const request&,
-                                     const std::shared_ptr<response>& res) {
+    web->on_fallback([](const request&,
+                        const std::shared_ptr<response>& res) {
         res->send(status_code::not_found, "Not found");
     });
 

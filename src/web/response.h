@@ -1,10 +1,11 @@
 #ifndef MONGOOSE_CPP_RESPONSE_H
 #define MONGOOSE_CPP_RESPONSE_H
 
+#include <mongoose.h>
+
 #include <string>
 #include <unordered_map>
 
-#include "mongoose.h"
 #include "status_code.h"
 
 namespace mg::http {
