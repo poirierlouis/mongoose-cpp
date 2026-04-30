@@ -155,7 +155,7 @@ void web_endpoint::handle_http_message(mg_connection* conn,
 void web_endpoint::handle_wakeup(mg_connection* conn, const mg_str* data) {
   const auto it_conn = m_pending.find(conn->id);
   if (it_conn == m_pending.end()) {
-    MG_ERROR(("HTTP connection %d not found", conn->id));
+    MG_ERROR(("errmsg=\"HTTP connection %d not found\"", conn->id));
     mg_http_reply(conn, http::internal_server_error::k_code,
                   http::internal_server_error::k_header,
                   http::internal_server_error::k_body);
@@ -166,7 +166,8 @@ void web_endpoint::handle_wakeup(mg_connection* conn, const mg_str* data) {
   auto& responses = it_conn->second;
   const auto it = responses.find(id);
   if (it == responses.end()) {
-    MG_ERROR(("HTTP response %zu not found for connection %d", id, conn->id));
+    MG_ERROR(("errmsg=\"HTTP response %zu not found for connection %d\"", id,
+              conn->id));
     mg_http_reply(conn, http::internal_server_error::k_code,
                   http::internal_server_error::k_header,
                   http::internal_server_error::k_body);

@@ -76,7 +76,7 @@ void server::setup() {
       });
   m_wakeup = mg_wakeup_init(m_mgr.get());
   if (!m_wakeup) {
-    MG_ERROR(("Failed to initialize asynchronous mode"));
+    MG_ERROR(("errmsg=\"Failed to initialize asynchronous mode\""));
   }
 }
 }  // namespace mg
