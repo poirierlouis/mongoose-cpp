@@ -42,13 +42,14 @@ void remote_context::setup(const mg_connection* conn) {
     const auto length = static_cast<size_t>(BIO_get_mem_data(bio, &buffer));
     return {buffer, length};
   };
-  const auto get_x509_time = [bio](const ASN1_TIME* time) -> std::string {
-    BIO_reset(bio);
+  const auto get_x509_time = [](const ASN1_TIME* time) -> std::string {
+    struct tm t;
+    if (ASN1_TIME_to_tm(time, &t) == 0) {
+      return "";
+    }
 
-    ASN1_TIME_print(bio, time);
-    char* buffer = nullptr;
-    const auto length = static_cast<size_t>(BIO_get_mem_data(bio, &buffer));
-    return {buffer, length};
+    const auto timestamp = timegm(&t);
+    return std::format("{}", timestamp);
   };
 
   const std::string subject = get_x509_name(X509_get_subject_name(cert));
