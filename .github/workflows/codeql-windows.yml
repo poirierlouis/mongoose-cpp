@@ -18,7 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['cpp']
+        language: ["cpp"]
+        preset: ["lib-win-openssl"]
 
     steps:
       - name: Checkout
@@ -26,22 +27,24 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Initialize CodeQL
+      - name: Setup CodeQL
         uses: github/codeql-action/init@v4
         with:
-          languages: ${{ matrix.language }}
+          languages: ${{matrix.language}}
           queries: security-extended,security-and-quality
+          trap-caching: true
 
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Configure CMake
-        run: cmake --preset lib-win-openssl
+      - name: Setup CMake
+        run: cmake -B build/${{matrix.preset}} --preset ${{matrix.preset}}
 
-      - name: Build project
-        run: cmake --build --preset lib-win-openssl
+      - name: Build library
+        run: cmake --build build/${{matrix.preset}} --config Release
 
       - name: Run CodeQL
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{matrix.language}}"
+          upload-database: false
