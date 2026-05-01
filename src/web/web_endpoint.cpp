@@ -11,7 +11,9 @@ web_endpoint::web_endpoint(std::weak_ptr<mg_mgr> mgr, std::string host)
 
 web_endpoint::~web_endpoint() {
   if (m_tls_alloc) {
-    mg_free(m_tls_ca.buf);
+    if (is_mtls()) {
+      mg_free(m_tls_ca.buf);
+    }
     mg_free(m_tls_cert.buf);
     mg_free(m_tls_key.buf);
     m_tls_alloc = false;
@@ -105,7 +107,12 @@ void web_endpoint::handle_secure(mg_connection* conn) const {
     return;
   }
 
-  const mg_tls_opts opts{.ca = m_tls_ca, .cert = m_tls_cert, .key = m_tls_key};
+  mg_tls_opts opts{};
+  if (is_mtls()) {
+    opts.ca = m_tls_ca;
+  }
+  opts.cert = m_tls_cert;
+  opts.key = m_tls_key;
   mg_tls_init(conn, &opts);
 }
 
