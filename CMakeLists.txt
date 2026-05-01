@@ -51,19 +51,15 @@ endif ()
 if (MGPP_TLS_LOWER STREQUAL "builtin")
     target_compile_definitions(${PROJECT_NAME} PUBLIC MG_TLS=MG_TLS_BUILTIN)
 
-    if (WIN32)
-        target_link_libraries(${PROJECT_NAME} PUBLIC crypt32 secur32 ws2_32)
-    endif ()
-
     message(STATUS "TLS enabled (builtin)")
 elseif (MGPP_TLS_LOWER STREQUAL "openssl")
     target_compile_definitions(${PROJECT_NAME} PUBLIC MG_TLS=MG_TLS_OPENSSL)
 
     find_package(OpenSSL REQUIRED)
 
-    if (WIN32)
-        target_link_libraries(${PROJECT_NAME} PUBLIC OpenSSL::SSL OpenSSL::Crypto crypt32 secur32 ws2_32)
-    endif ()
+    target_link_libraries(${PROJECT_NAME} PUBLIC
+            OpenSSL::SSL
+            OpenSSL::Crypto)
 
     message(STATUS "TLS enabled (OpenSSL)")
 #elseif (MGPP_TLS_LOWER STREQUAL "wolfssl")

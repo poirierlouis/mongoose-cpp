@@ -39,18 +39,16 @@ void remote_context::setup(const mg_connection* conn) {
 
     X509_NAME_print_ex(bio, name, 0, XN_FLAG_RFC2253);
     char* buffer = nullptr;
-    const long length = BIO_get_mem_data(bio, &buffer);
-    const std::string value(buffer, length);
-    return value.substr(3);
+    const auto length = static_cast<size_t>(BIO_get_mem_data(bio, &buffer));
+    return {buffer, length};
   };
   const auto get_x509_time = [bio](const ASN1_TIME* time) -> std::string {
     BIO_reset(bio);
 
     ASN1_TIME_print(bio, time);
     char* buffer = nullptr;
-    const long length = BIO_get_mem_data(bio, &buffer);
-    std::string value(buffer, length);
-    return value;
+    const auto length = static_cast<size_t>(BIO_get_mem_data(bio, &buffer));
+    return {buffer, length};
   };
 
   const std::string subject = get_x509_name(X509_get_subject_name(cert));
