@@ -36,8 +36,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure CMake
-        run: cmake --preset lib-win-openssl `
-          -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        run: cmake --preset lib-win-openssl
 
       - name: Build project
         run: cmake --build --preset lib-win-openssl
