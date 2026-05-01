@@ -11,7 +11,7 @@ if (OPENSSL_BIN)
     add_custom_command(
             TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND "${CMAKE_SOURCE_DIR}/example/tls.cmd" "${OPENSSL_BIN}" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-            COMMENT "Generating self-signed certificates...\n${CMAKE_SOURCE_DIR}/tls.cmd\n${OPENSSL_BIN}"
+            COMMENT "Generating self-signed certificates..."
     )
     target_sources(${PROJECT_NAME} PRIVATE "${CERT_FILE}" "${KEY_FILE}")
 else ()
