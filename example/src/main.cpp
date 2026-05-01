@@ -11,7 +11,7 @@ using namespace mg::http;
 
 void simple_handler(const request&, const std::shared_ptr<response>& res) {
   res->send(status_code::im_a_teapot,
-            "What starts with T, ends with T, but only has T in?\nTeapot");
+            "What starts with T, ends with T, but only has T in?");
 }
 
 class example {
@@ -181,7 +181,7 @@ int main(int, char**) {
           [&async_counter](const request& req,
                            const std::shared_ptr<async_response>& res) {
             std::thread thread(
-                [&async_counter, async_req = std::move(req.to_async()), res] {
+                [&async_counter, async_req = req.to_async(), res] {
                   const auto param = async_req->get_param(0).value_or("5");
                   const int sleep = to_int(param).value_or(5);
                   std::this_thread::sleep_for(std::chrono::seconds(sleep));
