@@ -3,20 +3,24 @@
 
 #include <mongoose.h>
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
+#include "remote_context.h"
+
 namespace mg::http {
 class async_request {
   mg_http_message m_msg{};
   std::vector<mg_str> m_groups;
+  std::weak_ptr<tls_cert_info> m_tls_cert_info;
 
  public:
   explicit async_request(const mg_http_message* msg);
-  explicit async_request(const mg_http_message* msg,
-                         std::vector<mg_str> groups);
+  explicit async_request(const mg_http_message* msg, std::vector<mg_str> groups,
+                         std::weak_ptr<tls_cert_info> tls_cert_info);
   ~async_request();
 
   async_request(const async_request&) = delete;
@@ -24,6 +28,8 @@ class async_request {
 
   async_request(async_request&&) noexcept = delete;
   async_request& operator=(async_request&&) = delete;
+
+  [[nodiscard]] std::weak_ptr<tls_cert_info> get_tls_cert_info() const;
 
   [[nodiscard]] std::string_view method() const;
   [[nodiscard]] std::string_view uri() const;

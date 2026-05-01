@@ -10,21 +10,26 @@
 #include <vector>
 
 #include "async_request.h"
+#include "remote_context.h"
 
 namespace mg::http {
 class request {
   mg_http_message* m_msg;
   std::vector<mg_str> m_groups;
+  std::weak_ptr<tls_cert_info> m_tls_cert_info;
 
  public:
-  explicit request(mg_http_message* msg);
-  explicit request(mg_http_message* msg, std::vector<mg_str> groups);
+  explicit request(mg_http_message* msg, const remote_context& context);
+  explicit request(mg_http_message* msg, const remote_context& context,
+                   std::vector<mg_str> groups);
 
   request(const request&) = delete;
   request& operator=(const request&) = delete;
 
   request(request&&) noexcept = default;
   request& operator=(request&&) = default;
+
+  [[nodiscard]] std::weak_ptr<tls_cert_info> get_tls_cert_info() const;
 
   [[nodiscard]] std::string_view method() const;
   [[nodiscard]] std::string_view uri() const;

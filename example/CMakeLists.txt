@@ -9,20 +9,17 @@ add_executable(${PROJECT_NAME}
         src/main.cpp
 )
 
-find_program(OPENSSL_EXECUTABLE openssl)
-if (OPENSSL_EXECUTABLE)
+find_program(OPENSSL_BIN openssl)
+if (OPENSSL_BIN)
     add_custom_command(
             TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${OPENSSL_EXECUTABLE} req -x509 -newkey rsa:4096
-            -keyout "$<TARGET_FILE_DIR:${PROJECT_NAME}>/key.pem"
-            -out "$<TARGET_FILE_DIR:${PROJECT_NAME}>/cert.pem"
-            -sha512 -days 365 -nodes -subj "/CN=localhost"
-            COMMENT "Generating self-signed certificate..."
+            COMMAND "${CMAKE_SOURCE_DIR}/tls.cmd" "${OPENSSL_BIN}" "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMENT "Generating self-signed certificates...\n${CMAKE_SOURCE_DIR}/tls.cmd\n${OPENSSL_BIN}"
     )
     target_sources(${PROJECT_NAME} PRIVATE "${CERT_FILE}" "${KEY_FILE}")
     target_compile_definitions(${PROJECT_NAME} PRIVATE HAS_TLS)
 else ()
-    message(WARNING "OpenSSL not found: running examples with TLS disabled.")
+    message(WARNING "OpenSSL not found. Please generate certificates manually.")
 endif ()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE mongoose_cpp)

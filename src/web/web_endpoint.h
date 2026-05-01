@@ -16,6 +16,7 @@ class web_endpoint : public endpoint {
   using responses =
       std::unordered_map<size_t, std::shared_ptr<http::async_response>>;
 
+  mg_str m_tls_ca{};
   mg_str m_tls_cert{};
   mg_str m_tls_key{};
   bool m_tls_alloc{false};
@@ -32,6 +33,9 @@ class web_endpoint : public endpoint {
   void handle_wakeup(mg_connection* conn, const mg_str* data);
   void handle_close(const mg_connection* conn);
 
+  void promote_context(mg_connection* conn);
+  void setup_context(const mg_connection* conn);
+
   [[nodiscard]] static size_t count_groups(std::string_view path);
 
  protected:
@@ -41,8 +45,14 @@ class web_endpoint : public endpoint {
   explicit web_endpoint(std::weak_ptr<mg_mgr> mgr, std::string host);
   ~web_endpoint() override;
 
+  [[nodiscard]] bool is_mtls() const;
+
   void use_tls(const std::string& cert, const std::string& key);
+  void use_tls(const std::string& ca, const std::string& cert,
+               const std::string& key);
   void use_tls(std::string_view cert, std::string_view key);
+  void use_tls(std::string_view ca, std::string_view cert,
+               std::string_view key);
 
   template <typename F>
   web_endpoint& on_request(const std::string& path, F&& callback) {

@@ -1,10 +1,18 @@
 #include "request.h"
 
 namespace mg::http {
-request::request(mg_http_message* msg) : m_msg(msg) {}
+request::request(mg_http_message* msg, const remote_context& context)
+    : request(msg, context, {}) {}
 
-request::request(mg_http_message* msg, std::vector<mg_str> groups)
-    : m_msg(msg), m_groups(std::move(groups)) {}
+request::request(mg_http_message* msg, const remote_context& context,
+                 std::vector<mg_str> groups)
+    : m_msg(msg),
+      m_groups(std::move(groups)),
+      m_tls_cert_info(context.get_tls_cert_info()) {}
+
+std::weak_ptr<tls_cert_info> request::get_tls_cert_info() const {
+  return m_tls_cert_info;
+}
 
 std::string_view request::method() const {
   return {m_msg->method.buf, m_msg->method.len};
@@ -43,6 +51,6 @@ std::string_view request::body() const {
 }
 
 std::unique_ptr<async_request> request::to_async() const {
-  return std::make_unique<async_request>(m_msg, m_groups);
+  return std::make_unique<async_request>(m_msg, m_groups, m_tls_cert_info);
 }
 }  // namespace mg::http
