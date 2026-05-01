@@ -60,13 +60,15 @@ int main(int, char**) {
       },
       MG_LL_DEBUG);
 
-#ifdef MGPP_OPENSSL
+#if MG_TLS == MG_TLS_OPENSSL
   const auto ca = read_file(std::filesystem::absolute("root.pem"));
   if (!ca) {
     std::cerr << "[mg::server] Failed to load server's root key" << '\n';
     return 1;
   }
+#endif
 
+#if MG_TLS == MG_TLS_BUILTIN || MG_TLS == MG_TLS_OPENSSL
   const auto cert = read_file(std::filesystem::absolute("server.crt"));
   if (!cert) {
     std::cerr << "[mg::server] Failed to load server's certificate" << '\n';
@@ -90,7 +92,9 @@ int main(int, char**) {
     return 1;
   }
 
-#ifdef MGPP_OPENSSL
+#if MG_TLS == MG_TLS_BUILTIN
+  web->use_tls(cert.value(), key.value());
+#elif MG_TLS == MG_TLS_OPENSSL
   web->use_tls(ca.value(), cert.value(), key.value());
 #endif
 

@@ -10,6 +10,12 @@ set(MGPP_TLS "builtin" CACHE STRING "TLS backend to use: none, builtin, openssl,
 set_property(CACHE MGPP_TLS PROPERTY STRINGS "none" "builtin" "openssl" "wolfssl")
 string(TOLOWER "${MGPP_TLS}" MGPP_TLS_LOWER)
 
+if("${CMAKE_PROJECT_NAME}" STREQUAL "mongoose_cpp")
+    option(BUILD_EXAMPLES "Build examples" ON)
+else()
+    option(BUILD_EXAMPLES "Build examples" OFF)
+endif()
+
 ##
 # Static library
 #
@@ -60,12 +66,17 @@ elseif (MGPP_TLS_LOWER STREQUAL "openssl")
     endif ()
 
     message(STATUS "TLS enabled (OpenSSL)")
-    #elseif (MGPP_TLS_LOWER STREQUAL "wolfssl")
-    #    TODO: find package and use
-    #
-    #    message(STATUS "TLS enabled (wolfSSL)")
+#elseif (MGPP_TLS_LOWER STREQUAL "wolfssl")
+#    TODO: find package and use
+#
+#    message(STATUS "TLS enabled (wolfSSL)")
 else ()
     target_compile_definitions(${PROJECT_NAME} PUBLIC MG_TLS=MG_TLS_NONE)
 
     message(STATUS "TLS is disabled")
+endif ()
+
+if (BUILD_EXAMPLES)
+    message(STATUS "Configuring examples...")
+    add_subdirectory(example)
 endif ()
