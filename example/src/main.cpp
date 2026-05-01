@@ -61,7 +61,7 @@ int main(int, char**) {
       MG_LL_DEBUG);
 
 #if MG_TLS == MG_TLS_OPENSSL
-  const auto ca = read_file(std::filesystem::absolute("root.pem"));
+  const auto ca = read_file(std::filesystem::absolute("../../../root.pem"));
   if (!ca) {
     std::cerr << "[mg::server] Failed to load server's root key" << '\n';
     return 1;
@@ -69,13 +69,13 @@ int main(int, char**) {
 #endif
 
 #if MG_TLS == MG_TLS_BUILTIN || MG_TLS == MG_TLS_OPENSSL
-  const auto cert = read_file(std::filesystem::absolute("server.crt"));
+  const auto cert = read_file(std::filesystem::absolute("../../../server.crt"));
   if (!cert) {
     std::cerr << "[mg::server] Failed to load server's certificate" << '\n';
     return 1;
   }
 
-  const auto key = read_file(std::filesystem::absolute("server.key"));
+  const auto key = read_file(std::filesystem::absolute("../../../server.key"));
   if (!key) {
     std::cerr << "[mg::server] Failed to load server's key" << '\n';
     return 1;
