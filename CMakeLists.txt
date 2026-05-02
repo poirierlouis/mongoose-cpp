@@ -73,10 +73,20 @@ elseif (MGPP_TLS_LOWER STREQUAL "mbedtls")
             MbedTLS::mbedx509)
 
     message(STATUS "TLS enabled (Mbed-TLS)")
-#elseif (MGPP_TLS_LOWER STREQUAL "wolfssl")
-#    TODO: find package and use
-#
-#    message(STATUS "TLS enabled (wolfSSL)")
+elseif (MGPP_TLS_LOWER STREQUAL "wolfssl")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC
+            MG_TLS=MG_TLS_WOLFSSL
+            EXTERNAL_OPTS_OPENVPN)
+
+    find_package(wolfssl REQUIRED)
+
+    get_target_property(WOLFSSL_INCLUDE_DIR wolfssl::wolfssl INTERFACE_INCLUDE_DIRECTORIES)
+    target_include_directories(${PROJECT_NAME} PUBLIC "${WOLFSSL_INCLUDE_DIR}/wolfssl")
+
+    target_link_libraries(${PROJECT_NAME} PUBLIC
+            wolfssl::wolfssl)
+
+    message(STATUS "TLS enabled (wolfSSL)")
 else ()
     target_compile_definitions(${PROJECT_NAME} PUBLIC MG_TLS=MG_TLS_NONE)
 

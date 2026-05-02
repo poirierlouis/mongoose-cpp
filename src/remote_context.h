@@ -58,50 +58,6 @@ class remote_context {
   void setup(const mg_connection* conn);
   void handle(mg_connection* conn, int ev, void* ev_data) const;
 };
-
-#if MG_TLS == MG_TLS_OPENSSL || MG_TLS == MG_TLS_WOLFSSL
-#define MGPP_OPENSSL
-
-// NOTE: copied from mongoose/src/tls_openssl.h
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-
-struct mg_tls {
-  BIO_METHOD* bm;
-  SSL_CTX* ctx;
-  SSL* ssl;
-};
-#elif MG_TLS == MG_TLS_MBED
-#define MGPP_MBED
-
-// NOTE: copied from mongoose/src/tls_mbed.h
-#include <mbedtls/debug.h>
-#include <mbedtls/error.h>
-#include <mbedtls/net_sockets.h>
-#include <mbedtls/ssl.h>
-#include <mbedtls/ssl_ticket.h>
-
-struct mg_tls_ctx {
-  int dummy;
-#ifdef MBEDTLS_SSL_SESSION_TICKETS
-  mbedtls_ssl_ticket_context tickets;
-#endif
-};
-
-struct mg_tls {
-  mbedtls_x509_crt ca;      // Parsed CA certificate
-  mbedtls_x509_crt cert;    // Parsed certificate
-  mbedtls_pk_context pk;    // Private key context
-  mbedtls_ssl_context ssl;  // SSL/TLS context
-  mbedtls_ssl_config conf;  // SSL-TLS config
-#ifdef MBEDTLS_SSL_SESSION_TICKETS
-  mbedtls_ssl_ticket_context ticket;  // Session tickets context
-#endif
-  // https://github.com/Mbed-TLS/mbedtls/blob/3b3c652d/include/mbedtls/ssl.h#L5071C18-L5076C29
-  unsigned char* throttled_buf;  // see #3074
-  size_t throttled_len;
-};
-#endif
 }  // namespace mg
 
 #endif  // MONGOOSE_CPP_REMOTE_CONTEXT_H
