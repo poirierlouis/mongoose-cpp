@@ -15,7 +15,11 @@ void remote_context::setup(const mg_connection* conn) {
     return;
   }
 
-#ifdef MGPP_OPENSSL
+#if MG_TLS == MG_TLS_OPENSSL || MG_TLS == MG_TLS_WOLFSSL
+#if MG_TLS == MG_TLS_WOLFSSL
+#define SSL_get0_peer_certificate wolfSSL_get_peer_certificate
+#endif
+
   const auto* tls = static_cast<mg_tls*>(conn->tls);
   if (!tls->ssl) {
     MG_ERROR(
@@ -23,7 +27,7 @@ void remote_context::setup(const mg_connection* conn) {
     return;
   }
 
-  const X509* cert = SSL_get0_peer_certificate(tls->ssl);
+  X509* cert = SSL_get0_peer_certificate(tls->ssl);
   if (!cert) {
     return;
   }
@@ -37,7 +41,12 @@ void remote_context::setup(const mg_connection* conn) {
   const auto get_x509_name = [bio](const X509_NAME* name) -> std::string {
     BIO_reset(bio);
 
+#if MG_TLS == MG_TLS_WOLFSSL
+    X509_NAME_print_ex(bio, const_cast<X509_NAME*>(name), 0, XN_FLAG_RFC2253);
+#else
     X509_NAME_print_ex(bio, name, 0, XN_FLAG_RFC2253);
+#endif
+
     char* buffer = nullptr;
     const auto length = static_cast<size_t>(BIO_get_mem_data(bio, &buffer));
     return {buffer, length};
@@ -104,8 +113,7 @@ void remote_context::setup(const mg_connection* conn) {
   m_tls_cert->fingerprint = {base + subject.size() + issuer.size() +
                                  serial.size() + before.size() + after.size(),
                              fingerprint.size()};
-#endif
-#ifdef MGPP_MBED
+#elif MG_TLS == MG_TLS_MBED
   const auto* tls = static_cast<mg_tls*>(conn->tls);
   auto* cert = mbedtls_ssl_get_peer_cert(&tls->ssl);
   if (!cert) {
