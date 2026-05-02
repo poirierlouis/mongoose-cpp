@@ -73,6 +73,11 @@ void server::setup() {
       [](mg_mgr* mgr) {
         mg_mgr_free(mgr);
         delete mgr;
+
+#if defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER >= 0x03000000 && \
+    defined(MBEDTLS_PSA_CRYPTO_C)
+        mbedtls_psa_crypto_free();
+#endif
       });
   m_wakeup = mg_wakeup_init(m_mgr.get());
   if (!m_wakeup) {
