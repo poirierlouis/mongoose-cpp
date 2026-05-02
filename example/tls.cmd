@@ -11,7 +11,7 @@ if exist "%path%\root.key" (
 )
 
 : Root
-"%openssl%" genrsa -out "%path%\root.key" 4096
+"%openssl%" ecparam -name prime256v1 -genkey -noout -out "%path%\root.key"
 "%openssl%" req -x509 ^
             -new ^
             -nodes ^
@@ -22,7 +22,7 @@ if exist "%path%\root.key" (
             -subj "/CN=mongoose-cpp-ca"
 
 : Client
-"%openssl%" genrsa -out "%path%\client.key" 2048
+"%openssl%" ecparam -name prime256v1 -genkey -noout -out "%path%\client.key"
 "%openssl%" req -new ^
             -key "%path%\client.key" ^
             -out "%path%\client.csr" ^
@@ -45,7 +45,7 @@ if exist "%path%\root.key" (
             -passout pass:password
 
 : Server
-"%openssl%" genrsa -out "%path%\server.key" 2048
+"%openssl%" ecparam -name prime256v1 -genkey -noout -out "%path%\server.key"
 "%openssl%" req -new ^
             -key "%path%\server.key" ^
             -out "%path%\server.csr" ^
