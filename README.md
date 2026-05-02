@@ -140,12 +140,12 @@ web->on_async_request("/long-task", [](const request& req,
   // req.to_async() captures request data safely for use in another thread
 
   // Zero-copy is a no-go in this case. One continuous memory-block is allocated
-  // to prevent memory fragmentation like Mongoose does.
+  // to prevent memory fragmentation like mongoose does.
 
   std::thread([async_req = req.to_async(), res]() {
     std::this_thread::sleep_for(std::chrono::seconds(2));
     
-    // use can use async_req safely
+    // you can use async_req safely
     res->send(status_code::ok, "Task completed");
   }).detach();
 });
@@ -173,7 +173,7 @@ See the [`example/`](example/src/main.cpp) for a complete runnable example
 demonstrating all these features, including different handler types,
 parameterized routes, TLS, and asynchronous responses.
 
-It includes a `tls.cmd` script to generate a self-signed certificate for 
+It includes a `tls.cmd` script to generate self-signed certificates for 
 testing. It will automatically run when you build the example project as long as
 you have OpenSSL installed. You can manually add `client.p12` certificate in 
 your browser to test mTLS.
