@@ -31,6 +31,7 @@ class web_endpoint : public endpoint {
   void handle_secure(mg_connection* conn) const;
   void handle_http_message(mg_connection* conn, mg_http_message* msg);
   void handle_wakeup(mg_connection* conn, const mg_str* data);
+  void handle_write(mg_connection* conn);
   void handle_close(const mg_connection* conn);
 
   void promote_context(mg_connection* conn);

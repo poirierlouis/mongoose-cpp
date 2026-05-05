@@ -2,7 +2,7 @@
 
 namespace mg {
 remote_context::remote_context(endpoint* endpoint, const mg_connection* conn)
-    : m_endpoint(endpoint) {
+    : m_endpoint(endpoint), m_stream(nullptr) {
   // TODO: setup remote IP address
 }
 
@@ -207,5 +207,29 @@ void remote_context::setup(const mg_connection* conn) {
 void remote_context::handle(mg_connection* conn, const int ev,
                             void* ev_data) const {
   m_endpoint->handle(conn, ev, ev_data);
+}
+
+void remote_context::set_stream(
+    std::unique_ptr<http::stream_producer> producer) {
+  m_stream = std::move(producer);
+}
+
+void remote_context::pump_stream(mg_connection* conn) {
+  if (!m_stream) {
+    return;
+  }
+
+  if (conn->send.len >= MG_IO_SIZE) {
+    return;
+  }
+
+  const auto chunk = m_stream->get();
+  if (!chunk) {
+    mg_http_write_chunk(conn, "", 0);
+    m_stream.reset();
+    return;
+  }
+
+  mg_http_write_chunk(conn, chunk->c_str(), chunk->size());
 }
 }  // namespace mg

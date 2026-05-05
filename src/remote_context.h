@@ -7,6 +7,7 @@
 #include <string>
 
 #include "endpoint.h"
+#include "web_common.h"
 
 namespace mg {
 class tls_cert_info {
@@ -48,6 +49,7 @@ class tls_cert_info {
 class remote_context {
   endpoint* m_endpoint;
   std::shared_ptr<tls_cert_info> m_tls_cert;
+  std::unique_ptr<http::stream_producer> m_stream;
 
  public:
   explicit remote_context(endpoint* endpoint, const mg_connection* conn);
@@ -57,6 +59,9 @@ class remote_context {
 
   void setup(const mg_connection* conn);
   void handle(mg_connection* conn, int ev, void* ev_data) const;
+
+  void set_stream(std::unique_ptr<http::stream_producer> producer);
+  void pump_stream(mg_connection* conn);
 };
 
 #if MG_TLS == MG_TLS_OPENSSL || MG_TLS == MG_TLS_WOLFSSL

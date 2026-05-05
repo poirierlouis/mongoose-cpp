@@ -75,6 +75,9 @@ void web_endpoint::handle(mg_connection* conn, const int ev, void* ev_data) {
     case MG_EV_WAKEUP:
       handle_wakeup(conn, static_cast<mg_str*>(ev_data));
       break;
+    case MG_EV_WRITE:
+      handle_write(conn);
+      break;
     case MG_EV_CLOSE:
       handle_close(conn);
       break;
@@ -187,6 +190,11 @@ void web_endpoint::handle_wakeup(mg_connection* conn, const mg_str* data) {
   response->mark_completed();
 
   responses.erase(it);
+}
+
+void web_endpoint::handle_write(mg_connection* conn) {
+  auto* context = static_cast<remote_context*>(conn->fn_data);
+  context->pump_stream(conn);
 }
 
 void web_endpoint::handle_close(const mg_connection* conn) {

@@ -24,6 +24,7 @@ add_library(${PROJECT_NAME} STATIC
         src/web/async_response.cpp
         src/web/request.cpp
         src/web/response.cpp
+        src/web/web_common.cpp
         src/web/web_endpoint.cpp
 
         src/endpoint.cpp
