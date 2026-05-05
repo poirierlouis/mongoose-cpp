@@ -20,15 +20,15 @@ endif()
 # Static library
 #
 add_library(${PROJECT_NAME} STATIC
-        src/web/async_request.cpp
-        src/web/async_response.cpp
-        src/web/request.cpp
-        src/web/response.cpp
-        src/web/web_common.cpp
-        src/web/web_endpoint.cpp
+        src/http/async_request.cpp
+        src/http/async_response.cpp
+        src/http/common.cpp
+        src/http/endpoint.cpp
+        src/http/remote_context.cpp
+        src/http/request.cpp
+        src/http/response.cpp
 
         src/endpoint.cpp
-        src/remote_context.cpp
         src/server.cpp
 
         vendors/mongoose/mongoose.c
@@ -36,7 +36,7 @@ add_library(${PROJECT_NAME} STATIC
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         src/
-        src/web/
+        src/http/
 
         vendors/mongoose/
 )

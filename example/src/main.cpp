@@ -87,21 +87,21 @@ int main(int, char**) {
   constexpr auto host = "http://127.0.0.1:4200";
 #endif
 
-  const auto web = server.listen_web(host);
-  if (!web) {
+  const auto http = server.listen_http(host);
+  if (!http) {
     std::cerr << "[mg::server] Failed to listen on " << host << '\n';
     return 1;
   }
 
 #if MG_TLS == MG_TLS_BUILTIN
-  web->use_tls(cert.value(), key.value());
+  http->use_tls(cert.value(), key.value());
 #elif MG_TLS == MG_TLS_OPENSSL || MG_TLS == MG_TLS_MBED
-  web->use_tls(ca.value(), cert.value(), key.value());
+  http->use_tls(ca.value(), cert.value(), key.value());
 #endif
 
   example ex;
   uint64_t counter{0};
-  web->on_request("/joke", &simple_handler)
+  http->on_request("/joke", &simple_handler)
       .on_request(
           "/class",
           [&ex](const request& req, const std::shared_ptr<response>& res) {
@@ -179,33 +179,33 @@ int main(int, char**) {
       });
 
   std::atomic_uint64_t async_counter{1};
-  web->on_async_request(
-         "/async/cert",
-         [](const request& req, const std::shared_ptr<async_response>& res) {
-           std::thread thread([async_req = req.to_async(), res] {
-             std::this_thread::sleep_for(std::chrono::seconds(2));
+  http->on_async_request(
+          "/async/cert",
+          [](const request& req, const std::shared_ptr<async_response>& res) {
+            std::thread thread([async_req = req.to_async(), res] {
+              std::this_thread::sleep_for(std::chrono::seconds(2));
 
-             if (const auto cert = async_req->get_tls_cert_info().lock()) {
-               res->send(status_code::ok,
-                         std::format(
-                             "--- Client certificate ---\n"
-                             "Subject:{}\n"
-                             "Issuer:{}\n"
-                             "Serial Number:{}\n"
-                             "Not Before:{}\n"
-                             "Not After:{}\n"
-                             "Fingerprint:{}",
-                             cert->get_subject_name(), cert->get_issuer_name(),
-                             cert->get_serial_number(), cert->get_not_before(),
-                             cert->get_not_after(), cert->get_fingerprint()));
-             } else {
-               res->send(status_code::bad_request,
-                         "No client certificate provided");
-             }
-           });
+              if (const auto cert = async_req->get_tls_cert_info().lock()) {
+                res->send(status_code::ok,
+                          std::format(
+                              "--- Client certificate ---\n"
+                              "Subject:{}\n"
+                              "Issuer:{}\n"
+                              "Serial Number:{}\n"
+                              "Not Before:{}\n"
+                              "Not After:{}\n"
+                              "Fingerprint:{}",
+                              cert->get_subject_name(), cert->get_issuer_name(),
+                              cert->get_serial_number(), cert->get_not_before(),
+                              cert->get_not_after(), cert->get_fingerprint()));
+              } else {
+                res->send(status_code::bad_request,
+                          "No client certificate provided");
+              }
+            });
 
-           thread.detach();
-         })
+            thread.detach();
+          })
       .on_async_request(
           "/async/?",
           [&async_counter](const request& req,

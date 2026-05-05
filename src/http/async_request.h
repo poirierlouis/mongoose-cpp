@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_ASYNC_REQUEST_H
-#define MONGOOSE_CPP_ASYNC_REQUEST_H
+#ifndef MONGOOSE_CPP_HTTP_ASYNC_REQUEST_H
+#define MONGOOSE_CPP_HTTP_ASYNC_REQUEST_H
 
 #include <mongoose.h>
 
@@ -42,4 +42,4 @@ class async_request {
 };
 }  // namespace mg::http
 
-#endif  // MONGOOSE_CPP_ASYNC_REQUEST_H
+#endif  // MONGOOSE_CPP_HTTP_ASYNC_REQUEST_H

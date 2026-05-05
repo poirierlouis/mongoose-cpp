@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_RESPONSE_H
-#define MONGOOSE_CPP_RESPONSE_H
+#ifndef MONGOOSE_CPP_HTTP_RESPONSE_H
+#define MONGOOSE_CPP_HTTP_RESPONSE_H
 
 #include <mongoose.h>
 
@@ -7,9 +7,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "common.h"
 #include "remote_context.h"
-#include "status_code.h"
-#include "web_common.h"
 
 namespace mg::http {
 namespace not_found {
@@ -91,4 +90,4 @@ class response {
 };
 }  // namespace mg::http
 
-#endif  // MONGOOSE_CPP_RESPONSE_H
+#endif  // MONGOOSE_CPP_HTTP_RESPONSE_H

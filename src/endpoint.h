@@ -8,7 +8,10 @@
 
 namespace mg {
 class server;
+
+namespace http {
 class remote_context;
+}
 }  // namespace mg
 
 namespace mg {
@@ -21,7 +24,7 @@ class endpoint {
   void setup(mg_connection* conn);
 
   friend class mg::server;
-  friend class mg::remote_context;
+  friend class mg::http::remote_context;
 
  protected:
   std::weak_ptr<mg_mgr> m_mgr;
