@@ -115,6 +115,36 @@ int main(int, char**) {
                 std::format("I'm a lambda callback ({} calls).", ++counter));
           })
       .on_request(
+          "/file",
+          [](const request&, const std::shared_ptr<response>& res) {
+            auto file =
+                std::make_unique<std::ifstream>("../../../../example/tls.cmd");
+            if (!file->is_open()) {
+              res->send(status_code::internal_server_error,
+                        "Failed to open file");
+              return;
+            }
+
+            res->set_header("Content-Type", "text/plain");
+            res->stream(
+                status_code::ok,
+                // "chunked" by default. You can set "chunked" and compression
+                // algorithm after the status code argument.
+                [file = std::move(file)]() -> std::optional<std::string> {
+                  if (file->eof()) {
+                    // terminating chunk
+                    return std::nullopt;
+                  }
+
+                  std::string chunk(32, '\0');
+                  file->read(chunk.data(),
+                             static_cast<std::streamsize>(chunk.size()));
+                  chunk.resize(file->gcount());
+                  return chunk;
+                });
+            res->send(status_code::bad_request);  // no-op
+          })
+      .on_request(
           "/api/#",
           [](const request& req, const std::shared_ptr<response>& res) {
             const auto param = req.get_param(0).value_or("");

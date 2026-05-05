@@ -20,8 +20,13 @@ void response::send_json(status_code code, const std::string& body) {
 void response::send(const int code) { send(code, ""); }
 
 void response::send(const int code, const std::string& body) {
+  if (!m_conn) {
+    return;
+  }
+
   const auto headers = format_headers();
   mg_http_reply(m_conn, code, headers.c_str(), "%s\n", body.c_str());
+  m_conn = nullptr;
 }
 
 void response::send_json(const int code, const std::string& body) {
