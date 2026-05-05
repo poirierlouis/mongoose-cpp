@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "endpoint.h"
+#include "http/endpoint.h"
 #include "logger_listener.h"
-#include "web_endpoint.h"
 
 #ifdef poll
 #undef poll
@@ -63,7 +63,7 @@ class server {
 
   [[nodiscard]] bool is_async() const;
 
-  std::shared_ptr<web_endpoint> listen_web(const std::string& host);
+  std::shared_ptr<http::endpoint> listen_http(const std::string& host);
   void poll(int ms = 0) const;
 };
 }  // namespace mg

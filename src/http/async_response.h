@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_ASYNC_RESPONSE_H
-#define MONGOOSE_CPP_ASYNC_RESPONSE_H
+#ifndef MONGOOSE_CPP_HTTP_ASYNC_RESPONSE_H
+#define MONGOOSE_CPP_HTTP_ASYNC_RESPONSE_H
 
 #include <mongoose.h>
 
@@ -7,11 +7,8 @@
 
 #include "response.h"
 
-namespace mg {
-class web_endpoint;
-}
-
 namespace mg::http {
+class endpoint;
 
 class async_response : public response {
  public:
@@ -34,7 +31,7 @@ class async_response : public response {
   void mark_completed();
   void mark_failed();
 
-  friend class mg::web_endpoint;
+  friend class endpoint;
 
  public:
   explicit async_response(unsigned long conn, std::weak_ptr<mg_mgr> mgr,
@@ -55,4 +52,4 @@ class async_response : public response {
 };
 }  // namespace mg::http
 
-#endif  // MONGOOSE_CPP_ASYNC_RESPONSE_H
+#endif  // MONGOOSE_CPP_HTTP_ASYNC_RESPONSE_H

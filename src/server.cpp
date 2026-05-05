@@ -4,8 +4,8 @@
 #include <memory>
 #include <ranges>
 
-#include "remote_context.h"
-#include "web/web_endpoint.h"
+#include "http/endpoint.h"
+#include "http/remote_context.h"
 
 namespace mg {
 void event_manager_handler(mg_connection* conn, const int ev, void* ev_data) {
@@ -15,7 +15,8 @@ void event_manager_handler(mg_connection* conn, const int ev, void* ev_data) {
 
 void event_manager_context_handler(mg_connection* conn, const int ev,
                                    void* ev_data) {
-  const auto context = static_cast<mg::remote_context*>(conn->fn_data);
+  // TODO: make `remote_context` an interface
+  const auto context = static_cast<http::remote_context*>(conn->fn_data);
   context->handle(conn, ev, ev_data);
 }
 
@@ -38,8 +39,8 @@ server::server(const int level) {
 
 bool server::is_async() const { return m_wakeup; }
 
-std::shared_ptr<web_endpoint> server::listen_web(const std::string& host) {
-  auto endpoint = std::make_shared<web_endpoint>(m_mgr, host);
+std::shared_ptr<http::endpoint> server::listen_http(const std::string& host) {
+  auto endpoint = std::make_shared<http::endpoint>(m_mgr, host);
   const auto conn = mg_http_listen(m_mgr.get(), host.c_str(),
                                    &event_manager_handler, endpoint.get());
   if (!conn) {

@@ -1,15 +1,17 @@
-#ifndef MONGOOSE_CPP_REMOTE_CONTEXT_H
-#define MONGOOSE_CPP_REMOTE_CONTEXT_H
+#ifndef MONGOOSE_CPP_HTTP_REMOTE_CONTEXT_H
+#define MONGOOSE_CPP_HTTP_REMOTE_CONTEXT_H
 
 #include <mongoose.h>
 
 #include <chrono>
 #include <string>
 
-#include "endpoint.h"
-#include "web_common.h"
+#include "../endpoint.h"
+#include "common.h"
 
-namespace mg {
+namespace mg::http {
+class remote_context;
+
 class tls_cert_info {
   std::string buffer;
 
@@ -49,7 +51,7 @@ class tls_cert_info {
 class remote_context {
   endpoint* m_endpoint;
   std::shared_ptr<tls_cert_info> m_tls_cert;
-  std::unique_ptr<http::stream_producer> m_stream;
+  std::unique_ptr<stream_producer> m_stream;
 
  public:
   explicit remote_context(endpoint* endpoint, const mg_connection* conn);
@@ -60,7 +62,7 @@ class remote_context {
   void setup(const mg_connection* conn);
   void handle(mg_connection* conn, int ev, void* ev_data) const;
 
-  void set_stream(std::unique_ptr<http::stream_producer> producer);
+  void set_stream(std::unique_ptr<stream_producer> producer);
   void pump_stream(mg_connection* conn);
 };
 
@@ -107,6 +109,6 @@ struct mg_tls {
   size_t throttled_len;
 };
 #endif
-}  // namespace mg
+}  // namespace mg::http
 
-#endif  // MONGOOSE_CPP_REMOTE_CONTEXT_H
+#endif  // MONGOOSE_CPP_HTTP_REMOTE_CONTEXT_H

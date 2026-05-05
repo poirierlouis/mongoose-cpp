@@ -1,6 +1,6 @@
 #include "remote_context.h"
 
-namespace mg {
+namespace mg::http {
 remote_context::remote_context(endpoint* endpoint, const mg_connection* conn)
     : m_endpoint(endpoint), m_stream(nullptr) {
   // TODO: setup remote IP address
@@ -209,8 +209,7 @@ void remote_context::handle(mg_connection* conn, const int ev,
   m_endpoint->handle(conn, ev, ev_data);
 }
 
-void remote_context::set_stream(
-    std::unique_ptr<http::stream_producer> producer) {
+void remote_context::set_stream(std::unique_ptr<stream_producer> producer) {
   m_stream = std::move(producer);
 }
 
@@ -232,4 +231,4 @@ void remote_context::pump_stream(mg_connection* conn) {
 
   mg_http_write_chunk(conn, chunk->c_str(), chunk->size());
 }
-}  // namespace mg
+}  // namespace mg::http

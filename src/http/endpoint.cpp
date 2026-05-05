@@ -1,15 +1,15 @@
-#include "web_endpoint.h"
+#include "endpoint.h"
 
 #include <ranges>
 
 #include "remote_context.h"
 #include "server.h"
 
-namespace mg {
-web_endpoint::web_endpoint(std::weak_ptr<mg_mgr> mgr, std::string host)
-    : endpoint(std::move(mgr), std::move(host)) {}
+namespace mg::http {
+endpoint::endpoint(std::weak_ptr<mg_mgr> mgr, std::string host)
+    : mg::endpoint(std::move(mgr), std::move(host)) {}
 
-web_endpoint::~web_endpoint() {
+endpoint::~endpoint() {
   if (m_tls_alloc) {
     if (is_mtls()) {
       mg_free(m_tls_ca.buf);
@@ -20,9 +20,9 @@ web_endpoint::~web_endpoint() {
   }
 }
 
-bool web_endpoint::is_mtls() const { return m_tls_ca.len > 0; }
+bool endpoint::is_mtls() const { return m_tls_ca.len > 0; }
 
-void web_endpoint::use_tls(const std::string& cert, const std::string& key) {
+void endpoint::use_tls(const std::string& cert, const std::string& key) {
   const mg_str tls_cert = mg_str_n(cert.c_str(), cert.size());
   const mg_str tls_key = mg_str_n(key.c_str(), key.size());
   m_tls_cert = mg_strdup(tls_cert);
@@ -30,8 +30,8 @@ void web_endpoint::use_tls(const std::string& cert, const std::string& key) {
   m_tls_alloc = true;
 }
 
-void web_endpoint::use_tls(const std::string& ca, const std::string& cert,
-                           const std::string& key) {
+void endpoint::use_tls(const std::string& ca, const std::string& cert,
+                       const std::string& key) {
   const mg_str tls_ca = mg_str_n(ca.c_str(), ca.size());
   const mg_str tls_cert = mg_str_n(cert.c_str(), cert.size());
   const mg_str tls_key = mg_str_n(key.c_str(), key.size());
@@ -41,21 +41,20 @@ void web_endpoint::use_tls(const std::string& ca, const std::string& cert,
   m_tls_alloc = true;
 }
 
-void web_endpoint::use_tls(const std::string_view cert,
-                           const std::string_view key) {
+void endpoint::use_tls(const std::string_view cert,
+                       const std::string_view key) {
   m_tls_cert = mg_str_n(cert.data(), cert.size());
   m_tls_key = mg_str_n(key.data(), key.size());
 }
 
-void web_endpoint::use_tls(const std::string_view ca,
-                           const std::string_view cert,
-                           const std::string_view key) {
+void endpoint::use_tls(const std::string_view ca, const std::string_view cert,
+                       const std::string_view key) {
   m_tls_ca = mg_str_n(ca.data(), ca.size());
   m_tls_cert = mg_str_n(cert.data(), cert.size());
   m_tls_key = mg_str_n(key.data(), key.size());
 }
 
-void web_endpoint::handle(mg_connection* conn, const int ev, void* ev_data) {
+void endpoint::handle(mg_connection* conn, const int ev, void* ev_data) {
   if (ev == MG_EV_ACCEPT) {
     handle_secure(conn);
     promote_context(conn);
@@ -86,7 +85,7 @@ void web_endpoint::handle(mg_connection* conn, const int ev, void* ev_data) {
   }
 }
 
-void web_endpoint::handle_poll(mg_connection* conn) {
+void endpoint::handle_poll(mg_connection* conn) {
   const auto it_conn = m_pending.find(conn->id);
   if (it_conn == m_pending.end()) {
     return;
@@ -94,10 +93,10 @@ void web_endpoint::handle_poll(mg_connection* conn) {
 
   auto& responses = it_conn->second;
   for (auto it = responses.begin(); it != responses.end();) {
-    if (it->second->get_state() == http::async_response::state::failed) {
-      mg_http_reply(conn, http::internal_server_error::k_code,
-                    http::internal_server_error::k_header,
-                    http::internal_server_error::k_body);
+    if (it->second->get_state() == async_response::state::failed) {
+      mg_http_reply(conn, internal_server_error::k_code,
+                    internal_server_error::k_header,
+                    internal_server_error::k_body);
       it = responses.erase(it);
     } else {
       ++it;
@@ -105,7 +104,7 @@ void web_endpoint::handle_poll(mg_connection* conn) {
   }
 }
 
-void web_endpoint::handle_secure(mg_connection* conn) const {
+void endpoint::handle_secure(mg_connection* conn) const {
   if (!conn->is_tls || m_tls_cert.len == 0 || m_tls_key.len == 0) {
     return;
   }
@@ -119,8 +118,7 @@ void web_endpoint::handle_secure(mg_connection* conn) const {
   mg_tls_init(conn, &opts);
 }
 
-void web_endpoint::handle_http_message(mg_connection* conn,
-                                       mg_http_message* msg) {
+void endpoint::handle_http_message(mg_connection* conn, mg_http_message* msg) {
   const auto* context = static_cast<remote_context*>(conn->fn_data);
 
   for (const auto& [path, listener] : m_listeners) {
@@ -128,15 +126,14 @@ void web_endpoint::handle_http_message(mg_connection* conn,
     std::vector<mg_str> groups{listener->get_groups() + 1};
 
     if (mg_match(msg->uri, str, groups.data())) {
-      const http::request request(msg, *context, std::move(groups));
+      const request request(msg, *context, std::move(groups));
       if (listener->is_async()) {
         const auto id = m_counter++;
-        const auto res =
-            std::make_shared<http::async_response>(conn->id, m_mgr, id);
+        const auto res = std::make_shared<async_response>(conn->id, m_mgr, id);
         m_pending[conn->id][id] = res;
         listener->invoke(request, res);
       } else {
-        const auto res = std::make_shared<http::response>(conn);
+        const auto res = std::make_shared<response>(conn);
         listener->invoke(request, res);
       }
       return;
@@ -144,31 +141,30 @@ void web_endpoint::handle_http_message(mg_connection* conn,
   }
 
   if (m_fallback) {
-    const http::request request(msg, *context);
+    const request request(msg, *context);
     if (m_fallback->is_async()) {
       const auto id = m_counter++;
-      const auto res =
-          std::make_shared<http::async_response>(conn->id, m_mgr, id);
+      const auto res = std::make_shared<async_response>(conn->id, m_mgr, id);
       m_pending[conn->id][id] = res;
       m_fallback->invoke(request, res);
     } else {
-      const auto res = std::make_shared<http::response>(conn);
+      const auto res = std::make_shared<response>(conn);
       m_fallback->invoke(request, res);
     }
     return;
   }
 
-  mg_http_reply(conn, http::not_found::k_code, http::not_found::k_header,
-                http::not_found::k_body);
+  mg_http_reply(conn, not_found::k_code, not_found::k_header,
+                not_found::k_body);
 }
 
-void web_endpoint::handle_wakeup(mg_connection* conn, const mg_str* data) {
+void endpoint::handle_wakeup(mg_connection* conn, const mg_str* data) {
   const auto it_conn = m_pending.find(conn->id);
   if (it_conn == m_pending.end()) {
     MG_ERROR(("errmsg=\"HTTP connection %d not found\"", conn->id));
-    mg_http_reply(conn, http::internal_server_error::k_code,
-                  http::internal_server_error::k_header,
-                  http::internal_server_error::k_body);
+    mg_http_reply(conn, internal_server_error::k_code,
+                  internal_server_error::k_header,
+                  internal_server_error::k_body);
     return;
   }
 
@@ -178,9 +174,9 @@ void web_endpoint::handle_wakeup(mg_connection* conn, const mg_str* data) {
   if (it == responses.end()) {
     MG_ERROR(("errmsg=\"HTTP response %zu not found for connection %d\"", id,
               conn->id));
-    mg_http_reply(conn, http::internal_server_error::k_code,
-                  http::internal_server_error::k_header,
-                  http::internal_server_error::k_body);
+    mg_http_reply(conn, internal_server_error::k_code,
+                  internal_server_error::k_header,
+                  internal_server_error::k_body);
     return;
   }
 
@@ -192,12 +188,12 @@ void web_endpoint::handle_wakeup(mg_connection* conn, const mg_str* data) {
   responses.erase(it);
 }
 
-void web_endpoint::handle_write(mg_connection* conn) {
+void endpoint::handle_write(mg_connection* conn) {
   auto* context = static_cast<remote_context*>(conn->fn_data);
   context->pump_stream(conn);
 }
 
-void web_endpoint::handle_close(const mg_connection* conn) {
+void endpoint::handle_close(const mg_connection* conn) {
   const auto dispose = [conn] {
     const auto* context = static_cast<remote_context*>(conn->fn_data);
     delete context;
@@ -217,18 +213,18 @@ void web_endpoint::handle_close(const mg_connection* conn) {
   dispose();
 }
 
-void web_endpoint::promote_context(mg_connection* conn) {
+void endpoint::promote_context(mg_connection* conn) {
   auto* context = new remote_context(this, conn);
   conn->fn = &event_manager_context_handler;
   conn->fn_data = context;
 }
 
-void web_endpoint::setup_context(const mg_connection* conn) {
+void endpoint::setup_context(const mg_connection* conn) {
   auto* context = static_cast<remote_context*>(conn->fn_data);
   context->setup(conn);
 }
 
-size_t web_endpoint::count_groups(const std::string_view path) {
+size_t endpoint::count_groups(const std::string_view path) {
   size_t groups = 0;
   for (const auto& c : path) {
     if (c == '?' || c == '*' || c == '#') {
@@ -237,4 +233,4 @@ size_t web_endpoint::count_groups(const std::string_view path) {
   }
   return groups;
 }
-}  // namespace mg
+}  // namespace mg::http

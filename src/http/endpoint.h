@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_WEB_ENDPOINT_H
-#define MONGOOSE_CPP_WEB_ENDPOINT_H
+#ifndef MONGOOSE_CPP_HTTP_ENDPOINT_H
+#define MONGOOSE_CPP_HTTP_ENDPOINT_H
 
 #include <mongoose.h>
 
@@ -9,20 +9,19 @@
 
 #include "async_response.h"
 #include "endpoint.h"
-#include "web_listener.h"
+#include "listener.h"
 
-namespace mg {
-class web_endpoint : public endpoint {
-  using responses =
-      std::unordered_map<size_t, std::shared_ptr<http::async_response>>;
+namespace mg::http {
+class endpoint : public mg::endpoint {
+  using responses = std::unordered_map<size_t, std::shared_ptr<async_response>>;
 
   mg_str m_tls_ca{};
   mg_str m_tls_cert{};
   mg_str m_tls_key{};
   bool m_tls_alloc{false};
 
-  std::unordered_map<std::string, std::unique_ptr<web_listener>> m_listeners{};
-  std::unique_ptr<web_listener> m_fallback{};
+  std::unordered_map<std::string, std::unique_ptr<listener>> m_listeners{};
+  std::unique_ptr<listener> m_fallback{};
 
   size_t m_counter{0};
   std::unordered_map<unsigned long, responses> m_pending{};
@@ -43,8 +42,8 @@ class web_endpoint : public endpoint {
   void handle(mg_connection* conn, int ev, void* ev_data) override;
 
  public:
-  explicit web_endpoint(std::weak_ptr<mg_mgr> mgr, std::string host);
-  ~web_endpoint() override;
+  explicit endpoint(std::weak_ptr<mg_mgr> mgr, std::string host);
+  ~endpoint() override;
 
   [[nodiscard]] bool is_mtls() const;
 
@@ -56,35 +55,35 @@ class web_endpoint : public endpoint {
                std::string_view key);
 
   template <typename F>
-  web_endpoint& on_request(const std::string& path, F&& callback) {
+  endpoint& on_request(const std::string& path, F&& callback) {
     m_listeners.insert_or_assign(
-        path, std::make_unique<lambda_web_listener<F, http::response>>(
+        path, std::make_unique<lambda_http_listener<F, response>>(
                   std::forward<F>(callback), count_groups(path)));
     return *this;
   }
 
   template <typename F>
-  web_endpoint& on_async_request(const std::string& path, F&& callback) {
+  endpoint& on_async_request(const std::string& path, F&& callback) {
     m_listeners.insert_or_assign(
-        path, std::make_unique<lambda_web_listener<F, http::async_response>>(
+        path, std::make_unique<lambda_http_listener<F, async_response>>(
                   std::forward<F>(callback), count_groups(path)));
     return *this;
   }
 
   template <typename F>
-  web_endpoint& on_fallback(F&& callback) {
-    m_fallback = std::make_unique<lambda_web_listener<F, http::response>>(
+  endpoint& on_fallback(F&& callback) {
+    m_fallback = std::make_unique<lambda_http_listener<F, response>>(
         std::forward<F>(callback), 0);
     return *this;
   }
 
   template <typename F>
-  web_endpoint& on_async_fallback(F&& callback) {
-    m_fallback = std::make_unique<lambda_web_listener<F, http::async_response>>(
+  endpoint& on_async_fallback(F&& callback) {
+    m_fallback = std::make_unique<lambda_http_listener<F, async_response>>(
         std::forward<F>(callback), 0);
     return *this;
   }
 };
-}  // namespace mg
+}  // namespace mg::http
 
-#endif  // MONGOOSE_CPP_WEB_ENDPOINT_H
+#endif  // MONGOOSE_CPP_HTTP_ENDPOINT_H

@@ -73,27 +73,27 @@ int main() {
     std::cout << "[log] " << msg;
   }, MG_LL_INFO);
 
-  auto web = server.listen_web("http://0.0.0.0:80");
-  if (!web) {
+  auto http = server.listen_http("http://0.0.0.0:80");
+  if (!http) {
     return 1;
   }
 
   // Lambda handler
-  web->on_request("/", [](const request&,
-                          const std::shared_ptr<response>& res) {
+  http->on_request("/", [](const request&,
+                           const std::shared_ptr<response>& res) {
     res->send(status_code::ok, "Hello, world!");
   });
 
   // Parameterized route with capture groups
-  web->on_request("/user/?", [](const request& req,
-                                const std::shared_ptr<response>& res) {
+  http->on_request("/user/?", [](const request& req,
+                                 const std::shared_ptr<response>& res) {
     const auto name = req.get_param(0).value_or("unknown");
     res->send(status_code::ok, std::format("Hello, {}!", name));
   });
 
   // JSON response
-  web->on_request("/api/status", [](const request&,
-                                    const std::shared_ptr<response>& res) {
+  http->on_request("/api/status", [](const request&,
+                                     const std::shared_ptr<response>& res) {
     res->send_json(status_code::ok, R"({"status": "up"})");
   });
 
@@ -115,32 +115,67 @@ Only builtin TLS (from mongoose), OpenSSL, and mbedTLS are supported for now.
 // Enable TLS
 const std::string cert = "data of server.crt";
 const std::string key = "data of server.key";
-web->use_tls(cert, key);
+http->use_tls(cert, key);
 
 // Enable two-way TLS (mTLS) by providing a CA certificate
 const std::string ca = "data of ca.pem";
-web->use_tls(ca, cert, key);
+http->use_tls(ca, cert, key);
 
 // Access client's certificate info
-web->on_request("/secure", [](const request& req,
-                              const std::shared_ptr<response>& res) {
+http->on_request("/secure", [](const request& req,
+                               const std::shared_ptr<response>& res) {
   if (const auto info = req.get_tls_cert_info().lock()) {
     res->send(status_code::ok, "Welcome, " + info->get_subject_name());
   }
 });
 ```
 
+### Chunked
+
+You can send a response in chunks. Optionally, you can set a compression
+algorithm. However, you are responsible for compressing the data yourself:
+```cpp
+http->on_request("/chunked", [](const request& req,
+                                const std::shared_ptr<response>& res) {
+  res->stream(status_code::ok, /* "gzip, chunked", */
+              []() -> std::optional<std::string> {
+    if (eof) {
+      // termination chunk is sent automatically.
+      return std::nullopt;
+    }
+
+    std::string chunk;
+    // read from a source
+    return chunk;
+  });
+
+  // no-op
+  res->send(status_code::bad_request);
+
+  // no-op
+  res->stream(status_code::no_content, []() -> std::optional<std::string> {
+    return std::nullopt;
+  });
+});
+```
+
+Internally, chunks are consumed as long as the internal IO buffer is smaller
+than `MG_IO_SIZE` (default: `16384`). Otherwise, it "waits" for mongoose to send
+the data down the wire before consuming more chunks.
+
+> [!WARNING]
+> This feature is not thread-safe. It allows you to send a big file while
+> running in a limited RAM environment. It will block mongoose's thread as long
+> as it takes for a chunk to be produced.
+
 ### Asynchronous Responses
 
-For long-running tasks or thread-safe responses:
+For long-running tasks / thread-safe responses:
 
 ```cpp
-web->on_async_request("/long-task", [](const request& req,
-                                       const std::shared_ptr<async_response>& res) {
+http->on_async_request("/long-task", [](const request& req,
+                                        const std::shared_ptr<async_response>& res) {
   // req.to_async() captures request data safely for use in another thread
-
-  // Zero-copy is a no-go in this case. One continuous memory-block is allocated
-  // to prevent memory fragmentation like mongoose does.
 
   std::thread([async_req = req.to_async(), res]() {
     std::this_thread::sleep_for(std::chrono::seconds(2));
