@@ -1,7 +1,8 @@
 #include "remote_context.h"
 
 namespace mg::http {
-remote_context::remote_context(endpoint* endpoint, const mg_connection* conn)
+remote_context::remote_context(mg::endpoint* endpoint,
+                               const mg_connection* conn)
     : m_endpoint(endpoint), m_stream(nullptr) {
   // TODO: setup remote IP address
 }

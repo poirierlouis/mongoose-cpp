@@ -3,7 +3,7 @@
 namespace mg::http {
 async_response::async_response(const unsigned long conn,
                                std::weak_ptr<mg_mgr> mgr, const size_t id)
-    : response(nullptr), m_conn(conn), m_mgr(std::move(mgr)), m_id(id) {}
+    : m_conn(conn), m_mgr(std::move(mgr)), m_id(id) {}
 
 size_t async_response::get_id() const { return m_id; }
 
@@ -15,19 +15,19 @@ async_response::state async_response::get_state() const {
   return m_state.load();
 }
 
+headers& async_response::get_headers() { return m_headers; }
+
+const headers& async_response::get_headers() const { return m_headers; }
+
 void async_response::send(const status_code code) {
-  async_response::send(static_cast<int>(code));
+  send(static_cast<int>(code));
 }
 
 void async_response::send(const status_code code, const std::string& body) {
-  async_response::send(static_cast<int>(code), body);
+  send(static_cast<int>(code), body);
 }
 
-void async_response::send_json(status_code code, const std::string& body) {
-  async_response::send_json(static_cast<int>(code), body);
-}
-
-void async_response::send(const int code) { async_response::send(code, ""); }
+void async_response::send(const int code) { send(code, ""); }
 
 void async_response::send(const int code, const std::string& body) {
   if (m_state != state::pending) {
@@ -36,7 +36,7 @@ void async_response::send(const int code, const std::string& body) {
 
   if (const auto mgr = m_mgr.lock()) {
     m_payload.code = code;
-    m_payload.headers = format_headers();
+    m_payload.headers = m_headers.format();
     m_payload.body = body;
 
     if (!mg_wakeup(mgr.get(), m_conn, &m_id, sizeof(m_id))) {
@@ -47,11 +47,6 @@ void async_response::send(const int code, const std::string& body) {
   } else {
     m_state = state::failed;
   }
-}
-
-void async_response::send_json(const int code, const std::string& body) {
-  set_header("Content-Type", "application/json");
-  async_response::send(code, body);
 }
 
 void async_response::mark_completed() { m_state = state::completed; }

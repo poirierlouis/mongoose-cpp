@@ -5,9 +5,9 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 #include "common.h"
+#include "headers.h"
 #include "remote_context.h"
 
 namespace mg::http {
@@ -25,14 +25,10 @@ constexpr auto k_body = "Internal Server Error\n";
 
 class response {
   mg_connection* m_conn;
-  std::unordered_map<std::string, std::string> m_headers;
-
- protected:
-  [[nodiscard]] std::string format_headers() const;
+  headers m_headers;
 
  public:
   explicit response(mg_connection* conn);
-  virtual ~response() = default;
 
   response(const response&) = delete;
   response& operator=(const response&) = delete;
@@ -40,15 +36,14 @@ class response {
   response(response&&) noexcept = default;
   response& operator=(response&&) = default;
 
-  void set_header(std::string name, std::string value);
+  [[nodiscard]] headers& get_headers();
+  [[nodiscard]] const headers& get_headers() const;
 
-  virtual void send(status_code code);
-  virtual void send(status_code code, const std::string& body);
-  virtual void send_json(status_code code, const std::string& body);
+  void send(status_code code);
+  void send(status_code code, const std::string& body);
 
-  virtual void send(int code);
-  virtual void send(int code, const std::string& body);
-  virtual void send_json(int code, const std::string& body);
+  void send(int code);
+  void send(int code, const std::string& body);
 
   template <typename F>
   void stream(status_code code, F&& callback) {
@@ -75,11 +70,11 @@ class response {
     auto producer =
         std::make_unique<lambda_stream_producer<F>>(std::forward<F>(callback));
 
-    m_headers.erase("Content-Length");
-    set_header("Transfer-Encoding", std::move(encoding));
+    m_headers.remove("Content-Length");
+    m_headers.set("Transfer-Encoding", std::move(encoding));
     const auto preamble =
         std::format("HTTP/1.1 {} {}\r\n{}\r\n", code, format_status_code(code),
-                    format_headers());
+                    m_headers.format());
     mg_send(m_conn, preamble.c_str(), preamble.size());
 
     auto* context = static_cast<remote_context*>(m_conn->fn_data);

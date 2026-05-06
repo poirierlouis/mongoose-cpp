@@ -115,6 +115,29 @@ int main(int, char**) {
                 std::format("I'm a lambda callback ({} calls).", ++counter));
           })
       .on_request(
+          "/headers",
+          [](const request&, const std::shared_ptr<response>& res) {
+            auto& headers = res->get_headers();
+            headers.set("Authorization", "Bearer [token]");
+
+            std::string body;
+
+            const auto auth = headers.get_view("authorization");
+            body += std::format("auth is {}\n", auth.value_or("<not found>"));
+
+            const auto fake = headers.get_view("fake");
+            body += std::format("fake is {}\n", fake.value_or("<not found>"));
+
+            headers.set("X-Fake", "warning");
+            // previous get_view results are invalidated due to write operation.
+
+            body +=
+                std::format("X-Fake is {}",
+                            headers.get_view("x-fake").value_or("<not found>"));
+
+            res->send(status_code::ok, body);
+          })
+      .on_request(
           "/file",
           [](const request&, const std::shared_ptr<response>& res) {
             auto file =
@@ -125,7 +148,7 @@ int main(int, char**) {
               return;
             }
 
-            res->set_header("Content-Type", "text/plain");
+            res->get_headers().set("Content-Type", "text/plain");
             res->stream(
                 status_code::ok,
                 // "chunked" by default. You can set "chunked" and compression
