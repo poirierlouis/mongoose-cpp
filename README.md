@@ -18,7 +18,6 @@ targets.
 - Fallback handler support (404)
 - TLS/HTTPS support (built-in, OpenSSL, mbedTLS)
 - Two-way TLS (mTLS) with client certificate extraction
-- JSON response utility
 - Custom logging with configurable levels and callbacks
 - `std::string_view` based request accessors (zero-copy)
 - No exceptions, no RTTI — suitable for embedded use

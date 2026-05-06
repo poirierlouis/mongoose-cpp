@@ -11,6 +11,7 @@
 #include "http/async_response.h"
 #include "http/common.h"
 #include "http/endpoint.h"
+#include "http/headers.h"
 #include "http/listener.h"
 #include "http/request.h"
 #include "http/response.h"

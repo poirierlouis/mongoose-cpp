@@ -3,14 +3,17 @@
 
 #include <mongoose.h>
 
+#include <atomic>
 #include <memory>
+#include <string>
 
-#include "response.h"
+#include "common.h"
+#include "headers.h"
 
 namespace mg::http {
 class endpoint;
 
-class async_response : public response {
+class async_response {
  public:
   enum class state { pending, sending, completed, failed };
 
@@ -25,6 +28,7 @@ class async_response : public response {
   std::weak_ptr<mg_mgr> m_mgr;
   const size_t m_id;
 
+  headers m_headers;
   payload m_payload{};
   std::atomic<state> m_state{state::pending};
 
@@ -36,19 +40,19 @@ class async_response : public response {
  public:
   explicit async_response(unsigned long conn, std::weak_ptr<mg_mgr> mgr,
                           size_t id);
-  ~async_response() override = default;
 
   [[nodiscard]] size_t get_id() const;
   [[nodiscard]] const payload& get_payload() const;
   [[nodiscard]] state get_state() const;
 
-  void send(status_code code) override;
-  void send(status_code code, const std::string& body) override;
-  void send_json(status_code code, const std::string& body) override;
+  [[nodiscard]] headers& get_headers();
+  [[nodiscard]] const headers& get_headers() const;
 
-  void send(int code) override;
-  void send(int code, const std::string& body) override;
-  void send_json(int code, const std::string& body) override;
+  void send(status_code code);
+  void send(status_code code, const std::string& body);
+
+  void send(int code);
+  void send(int code, const std::string& body);
 };
 }  // namespace mg::http
 

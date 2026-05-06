@@ -24,6 +24,7 @@ add_library(${PROJECT_NAME} STATIC
         src/http/async_response.cpp
         src/http/common.cpp
         src/http/endpoint.cpp
+        src/http/headers.cpp
         src/http/remote_context.cpp
         src/http/request.cpp
         src/http/response.cpp
