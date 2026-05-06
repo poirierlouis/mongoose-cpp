@@ -9,6 +9,7 @@
 
 #include "http/async_request.h"
 #include "http/async_response.h"
+#include "http/async_stream.h"
 #include "http/common.h"
 #include "http/endpoint.h"
 #include "http/headers.h"

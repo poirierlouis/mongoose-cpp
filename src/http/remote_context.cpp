@@ -1,5 +1,7 @@
 #include "remote_context.h"
 
+#include "async_stream.h"
+
 namespace mg::http {
 remote_context::remote_context(mg::endpoint* endpoint,
                                const mg_connection* conn)
@@ -231,5 +233,19 @@ void remote_context::pump_stream(mg_connection* conn) {
   }
 
   mg_http_write_chunk(conn, chunk->c_str(), chunk->size());
+}
+
+void remote_context::pump_async_stream(
+    const mg_connection* conn, const std::shared_ptr<async_stream>& stream) {
+  if (const auto state = stream->get_state();
+      state != async_stream::state::flush) {
+    return;
+  }
+
+  if (conn->send.len >= MG_IO_SIZE) {
+    return;
+  }
+
+  stream->mark_empty();
 }
 }  // namespace mg::http

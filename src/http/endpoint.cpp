@@ -86,8 +86,8 @@ void endpoint::handle(mg_connection* conn, const int ev, void* ev_data) {
 }
 
 void endpoint::handle_poll(mg_connection* conn) {
-  const auto it_conn = m_pending.find(conn->id);
-  if (it_conn == m_pending.end()) {
+  const auto it_conn = m_pending_responses.find(conn->id);
+  if (it_conn == m_pending_responses.end()) {
     return;
   }
 
@@ -128,9 +128,9 @@ void endpoint::handle_http_message(mg_connection* conn, mg_http_message* msg) {
     if (mg_match(msg->uri, str, groups.data())) {
       const request request(msg, *context, std::move(groups));
       if (listener->is_async()) {
-        const auto id = m_counter++;
+        const auto id = m_request_counter++;
         const auto res = std::make_shared<async_response>(conn->id, m_mgr, id);
-        m_pending[conn->id][id] = res;
+        m_pending_responses[conn->id][id] = res;
         listener->invoke(request, res);
       } else {
         const auto res = std::make_shared<response>(conn);
@@ -143,9 +143,9 @@ void endpoint::handle_http_message(mg_connection* conn, mg_http_message* msg) {
   if (m_fallback) {
     const request request(msg, *context);
     if (m_fallback->is_async()) {
-      const auto id = m_counter++;
+      const auto id = m_request_counter++;
       const auto res = std::make_shared<async_response>(conn->id, m_mgr, id);
-      m_pending[conn->id][id] = res;
+      m_pending_responses[conn->id][id] = res;
       m_fallback->invoke(request, res);
     } else {
       const auto res = std::make_shared<response>(conn);
@@ -159,38 +159,28 @@ void endpoint::handle_http_message(mg_connection* conn, mg_http_message* msg) {
 }
 
 void endpoint::handle_wakeup(mg_connection* conn, const mg_str* data) {
-  const auto it_conn = m_pending.find(conn->id);
-  if (it_conn == m_pending.end()) {
-    MG_ERROR(("errmsg=\"HTTP connection %d not found\"", conn->id));
-    mg_http_reply(conn, internal_server_error::k_code,
-                  internal_server_error::k_header,
-                  internal_server_error::k_body);
+  if (handle_stream(conn, data)) {
     return;
   }
 
-  const auto id = *reinterpret_cast<size_t*>(data->buf);
-  auto& responses = it_conn->second;
-  const auto it = responses.find(id);
-  if (it == responses.end()) {
-    MG_ERROR(("errmsg=\"HTTP response %zu not found for connection %d\"", id,
-              conn->id));
-    mg_http_reply(conn, internal_server_error::k_code,
-                  internal_server_error::k_header,
-                  internal_server_error::k_body);
+  if (handle_response(conn, data)) {
     return;
   }
 
-  const auto& response = it->second;
-  const auto& [code, headers, body] = response->get_payload();
-  mg_http_reply(conn, code, headers.c_str(), "%s\n", body.c_str());
-  response->mark_completed();
-
-  responses.erase(it);
+  MG_ERROR(("errmsg=\"HTTP connection %d not found\"", conn->id));
+  mg_http_reply(conn, internal_server_error::k_code,
+                internal_server_error::k_header, internal_server_error::k_body);
 }
 
 void endpoint::handle_write(mg_connection* conn) {
   auto* context = static_cast<remote_context*>(conn->fn_data);
   context->pump_stream(conn);
+
+  for (const auto& streams : m_pending_streams | std::views::values) {
+    for (const auto& stream : streams | std::views::values) {
+      context->pump_async_stream(conn, stream);
+    }
+  }
 }
 
 void endpoint::handle_close(const mg_connection* conn) {
@@ -199,18 +189,104 @@ void endpoint::handle_close(const mg_connection* conn) {
     delete context;
   };
 
-  const auto& it = m_pending.find(conn->id);
-  if (it == m_pending.end()) {
-    dispose();
-    return;
+  if (const auto& it = m_pending_responses.find(conn->id);
+      it != m_pending_responses.end()) {
+    for (const auto& response : it->second | std::views::values) {
+      response->mark_failed();
+    }
+    m_pending_responses.erase(it);
   }
 
-  for (const auto& response : it->second | std::views::values) {
-    response->mark_failed();
+  if (const auto& it = m_pending_streams.find(conn->id);
+      it != m_pending_streams.end()) {
+    for (const auto& stream : it->second | std::views::values) {
+      stream->mark_failed();
+    }
+    m_pending_streams.erase(it);
   }
-  m_pending.erase(it);
 
   dispose();
+}
+
+bool endpoint::handle_response(mg_connection* conn, const mg_str* data) {
+  const auto it_conn = m_pending_responses.find(conn->id);
+  if (it_conn == m_pending_responses.end()) {
+    MG_ERROR(("errmsg=\"HTTP connection %d not found\"", conn->id));
+    mg_http_reply(conn, internal_server_error::k_code,
+                  internal_server_error::k_header,
+                  internal_server_error::k_body);
+    return false;
+  }
+
+  const auto id = *reinterpret_cast<size_t*>(data->buf);
+  auto& responses = it_conn->second;
+  const auto it = responses.find(id);
+  if (it == responses.end()) {
+    MG_ERROR(("errmsg=\"HTTP response %d not found for connection %d\"", id,
+              conn->id));
+    mg_http_reply(conn, internal_server_error::k_code,
+                  internal_server_error::k_header,
+                  internal_server_error::k_body);
+    return false;
+  }
+
+  const auto& response = it->second;
+  if (response->get_state() == async_response::state::streaming) {
+    m_pending_streams[conn->id][id] = response->get_stream();
+    responses.erase(it);
+    return handle_stream(conn, data);
+  }
+
+  const auto& [code, headers, body] = response->get_payload();
+  mg_http_reply(conn, code, headers.c_str(), "%s\n", body.c_str());
+  response->mark_completed();
+
+  responses.erase(it);
+  return true;
+}
+
+bool endpoint::handle_stream(mg_connection* conn, const mg_str* data) {
+  const auto it_conn = m_pending_streams.find(conn->id);
+  if (it_conn == m_pending_streams.end()) {
+    return false;
+  }
+
+  const auto id = *reinterpret_cast<size_t*>(data->buf);
+  auto& streams = it_conn->second;
+  const auto it = streams.find(id);
+  if (it == streams.end()) {
+    return false;
+  }
+
+  const auto& stream = it->second;
+  switch (stream->get_state()) {
+    case async_stream::state::start: {
+      const auto preamble = stream->get_data();
+      mg_send(conn, preamble.data(), preamble.size());
+      stream->mark_flush();
+      return true;
+    }
+    case async_stream::state::has_data: {
+      const auto chunk = stream->get_data();
+      mg_http_write_chunk(conn, chunk.data(), chunk.size());
+      stream->mark_flush();
+      return true;
+    }
+    case async_stream::state::close: {
+      mg_http_write_chunk(conn, "", 0);
+      stream->mark_completed();
+      streams.erase(it);
+      if (streams.empty()) {
+        m_pending_streams.erase(it_conn);
+      }
+      return true;
+    }
+    default:
+      // NOTE: wait until mongoose flushes the internal IO buffer to the
+      //       network. This provides backpressure, preventing the producer from
+      //       overfilling RAM.
+      return true;
+  }
 }
 
 void endpoint::promote_context(mg_connection* conn) {

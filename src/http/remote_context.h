@@ -11,6 +11,7 @@
 
 namespace mg::http {
 class remote_context;
+class async_stream;
 
 class tls_cert_info {
   std::string buffer;
@@ -64,6 +65,8 @@ class remote_context {
 
   void set_stream(std::unique_ptr<stream_producer> producer);
   void pump_stream(mg_connection* conn);
+  void pump_async_stream(const mg_connection* conn,
+                         const std::shared_ptr<async_stream>& stream);
 };
 
 #if MG_TLS == MG_TLS_OPENSSL || MG_TLS == MG_TLS_WOLFSSL

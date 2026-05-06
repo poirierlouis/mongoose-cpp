@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 
+#include "async_stream.h"
 #include "common.h"
 #include "headers.h"
 
@@ -15,7 +16,7 @@ class endpoint;
 
 class async_response {
  public:
-  enum class state { pending, sending, completed, failed };
+  enum class state { pending, sending, streaming, completed, failed };
 
  private:
   struct payload {
@@ -31,19 +32,21 @@ class async_response {
   headers m_headers;
   payload m_payload{};
   std::atomic<state> m_state{state::pending};
+  std::shared_ptr<async_stream> m_stream{};
 
   void mark_completed();
   void mark_failed();
+
+  [[nodiscard]] size_t get_id() const;
+  [[nodiscard]] const payload& get_payload() const;
+  [[nodiscard]] state get_state() const;
+  [[nodiscard]] std::shared_ptr<async_stream> get_stream();
 
   friend class endpoint;
 
  public:
   explicit async_response(unsigned long conn, std::weak_ptr<mg_mgr> mgr,
                           size_t id);
-
-  [[nodiscard]] size_t get_id() const;
-  [[nodiscard]] const payload& get_payload() const;
-  [[nodiscard]] state get_state() const;
 
   [[nodiscard]] headers& get_headers();
   [[nodiscard]] const headers& get_headers() const;
@@ -53,6 +56,11 @@ class async_response {
 
   void send(int code);
   void send(int code, const std::string& body);
+
+  std::shared_ptr<async_stream> stream(status_code code,
+                                       std::string encoding = "chunked");
+  std::shared_ptr<async_stream> stream(int code,
+                                       std::string encoding = "chunked");
 };
 }  // namespace mg::http
 
