@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 ##
 # Options
 #
-set(MGPP_TLS "builtin" CACHE STRING "TLS backend to use: none, builtin, openssl, mbedtls, wolfssl")
-set_property(CACHE MGPP_TLS PROPERTY STRINGS "none" "builtin" "openssl" "mbedtls" "wolfssl")
+set(MGPP_TLS "builtin" CACHE STRING "TLS backend to use: none, builtin, openssl, mbedtls")
+set_property(CACHE MGPP_TLS PROPERTY STRINGS "none" "builtin" "openssl" "mbedtls")
 string(TOLOWER "${MGPP_TLS}" MGPP_TLS_LOWER)
 
 # TODO: add option/definition to let end-user disable exceptions
