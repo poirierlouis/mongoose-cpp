@@ -114,6 +114,11 @@ int main(int, char**) {
                 status_code::ok,
                 std::format("I'm a lambda callback ({} calls).", ++counter));
           })
+      .on_request("/who",
+                  [](const request& req, const std::shared_ptr<response>& res) {
+                    res->send(status_code::ok,
+                              std::format("You are {}!", req.get_remote_ip()));
+                  })
       .on_request(
           "/headers",
           [](const request&, const std::shared_ptr<response>& res) {
@@ -225,6 +230,18 @@ int main(int, char**) {
                 res->send(status_code::bad_request,
                           "No client certificate provided");
               }
+            });
+
+            thread.detach();
+          })
+      .on_async_request(
+          "/async/who",
+          [](const request& req, const std::shared_ptr<async_response>& res) {
+            std::thread thread([async_req = req.to_async(), res] {
+              std::this_thread::sleep_for(std::chrono::seconds(2));
+
+              res->send(status_code::ok,
+                        std::format("You are {}!", async_req->get_remote_ip()));
             });
 
             thread.detach();

@@ -51,6 +51,7 @@ class tls_cert_info {
 
 class remote_context {
   mg::endpoint* m_endpoint;
+  std::string m_ip;
   std::shared_ptr<tls_cert_info> m_tls_cert;
   std::unique_ptr<stream_producer> m_stream;
 
@@ -58,6 +59,7 @@ class remote_context {
   explicit remote_context(mg::endpoint* endpoint, const mg_connection* conn);
   ~remote_context() = default;
 
+  [[nodiscard]] std::string_view get_remote_ip() const;
   [[nodiscard]] std::weak_ptr<tls_cert_info> get_tls_cert_info() const;
 
   void setup(const mg_connection* conn);

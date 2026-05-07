@@ -16,6 +16,7 @@ namespace mg::http {
 class request {
   mg_http_message* m_msg;
   std::vector<mg_str> m_groups;
+  std::string_view m_ip;
   std::weak_ptr<tls_cert_info> m_tls_cert_info;
 
  public:
@@ -29,6 +30,7 @@ class request {
   request(request&&) noexcept = default;
   request& operator=(request&&) = default;
 
+  [[nodiscard]] std::string_view get_remote_ip() const;
   [[nodiscard]] std::weak_ptr<tls_cert_info> get_tls_cert_info() const;
 
   [[nodiscard]] std::string_view method() const;

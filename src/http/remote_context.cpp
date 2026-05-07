@@ -5,9 +5,9 @@
 namespace mg::http {
 remote_context::remote_context(mg::endpoint* endpoint,
                                const mg_connection* conn)
-    : m_endpoint(endpoint), m_stream(nullptr) {
-  // TODO: setup remote IP address
-}
+    : m_endpoint(endpoint), m_ip(format_ip(&conn->rem)), m_stream(nullptr) {}
+
+std::string_view remote_context::get_remote_ip() const { return m_ip; }
 
 std::weak_ptr<tls_cert_info> remote_context::get_tls_cert_info() const {
   return m_tls_cert;

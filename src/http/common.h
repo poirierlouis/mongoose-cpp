@@ -1,10 +1,16 @@
 #ifndef MONGOOSE_CPP_HTTP_COMMON_H
 #define MONGOOSE_CPP_HTTP_COMMON_H
 
+#include <mongoose.h>
+
 #include <optional>
 #include <string>
 
 #include "supplier.h"
+
+namespace mg {
+std::string format_ip(const mg_addr* ip);
+}  // namespace mg
 
 namespace mg::http {
 using stream_producer = supplier<std::optional<std::string>>;

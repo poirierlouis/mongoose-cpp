@@ -8,7 +8,10 @@ request::request(mg_http_message* msg, const remote_context& context,
                  std::vector<mg_str> groups)
     : m_msg(msg),
       m_groups(std::move(groups)),
+      m_ip(context.get_remote_ip()),
       m_tls_cert_info(context.get_tls_cert_info()) {}
+
+std::string_view request::get_remote_ip() const { return m_ip; }
 
 std::weak_ptr<tls_cert_info> request::get_tls_cert_info() const {
   return m_tls_cert_info;
@@ -51,6 +54,7 @@ std::string_view request::body() const {
 }
 
 std::unique_ptr<async_request> request::to_async() const {
-  return std::make_unique<async_request>(m_msg, m_groups, m_tls_cert_info);
+  return std::make_unique<async_request>(m_msg, m_groups, m_ip,
+                                         m_tls_cert_info);
 }
 }  // namespace mg::http
