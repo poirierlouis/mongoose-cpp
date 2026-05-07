@@ -10,6 +10,8 @@ set(MGPP_TLS "builtin" CACHE STRING "TLS backend to use: none, builtin, openssl,
 set_property(CACHE MGPP_TLS PROPERTY STRINGS "none" "builtin" "openssl" "mbedtls" "wolfssl")
 string(TOLOWER "${MGPP_TLS}" MGPP_TLS_LOWER)
 
+# TODO: add option/definition to let end-user disable exceptions
+
 if("${CMAKE_PROJECT_NAME}" STREQUAL "mongoose_cpp")
     option(BUILD_EXAMPLES "Build examples" ON)
 else()
@@ -44,7 +46,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 if (MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /EHsc /GR-)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE _HAS_EXCEPTIONS=0)
+    target_compile_options(${PROJECT_NAME} PRIVATE /GR- /EHs- /EHc- /Zc:throwingNew-)
 else ()
     target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti)
 endif ()
