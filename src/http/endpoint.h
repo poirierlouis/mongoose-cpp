@@ -14,6 +14,7 @@
 namespace mg::http {
 class endpoint : public mg::endpoint {
   using responses = std::unordered_map<size_t, std::shared_ptr<async_response>>;
+  using streams = std::unordered_map<size_t, std::shared_ptr<async_stream>>;
 
   mg_str m_tls_ca{};
   mg_str m_tls_cert{};
@@ -23,8 +24,9 @@ class endpoint : public mg::endpoint {
   std::unordered_map<std::string, std::unique_ptr<listener>> m_listeners{};
   std::unique_ptr<listener> m_fallback{};
 
-  size_t m_counter{0};
-  std::unordered_map<unsigned long, responses> m_pending{};
+  size_t m_request_counter{0};
+  std::unordered_map<unsigned long, responses> m_pending_responses{};
+  std::unordered_map<unsigned long, streams> m_pending_streams{};
 
   void handle_poll(mg_connection* conn);
   void handle_secure(mg_connection* conn) const;
@@ -32,6 +34,9 @@ class endpoint : public mg::endpoint {
   void handle_wakeup(mg_connection* conn, const mg_str* data);
   void handle_write(mg_connection* conn);
   void handle_close(const mg_connection* conn);
+
+  [[nodiscard]] bool handle_response(mg_connection* conn, const mg_str* data);
+  [[nodiscard]] bool handle_stream(mg_connection* conn, const mg_str* data);
 
   void promote_context(mg_connection* conn);
   void setup_context(const mg_connection* conn);

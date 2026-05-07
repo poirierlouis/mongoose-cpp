@@ -22,6 +22,7 @@ endif()
 add_library(${PROJECT_NAME} STATIC
         src/http/async_request.cpp
         src/http/async_response.cpp
+        src/http/async_stream.cpp
         src/http/common.cpp
         src/http/endpoint.cpp
         src/http/headers.cpp

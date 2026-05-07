@@ -230,6 +230,44 @@ int main(int, char**) {
             thread.detach();
           })
       .on_async_request(
+          "/async/file",
+          [](const request&, const std::shared_ptr<async_response>& res) {
+            std::thread thread([res] {
+              std::ifstream file("../../../../example/tls.cmd");
+              if (!file.is_open()) {
+                res->send(status_code::internal_server_error,
+                          "Failed to open file");
+                return;
+              }
+
+              res->get_headers().set("Content-Type", "text/plain");
+
+              const auto stream =
+                  res->stream(status_code::ok /*, "gzip, chunked" */);
+              while (stream->wait()) {
+                if (file.eof()) {
+                  stream->close();
+                  break;
+                }
+
+                std::string chunk(32, '\0');
+                file.read(chunk.data(),
+                          static_cast<std::streamsize>(chunk.size()));
+                chunk.resize(file.gcount());
+                stream->send(std::move(chunk));
+
+                // simulate busy work
+                std::this_thread::sleep_for(std::chrono::milliseconds(16));
+              }
+
+              if (stream->failed()) {
+                MG_ERROR(("Failed to send file."));
+              }
+            });
+
+            thread.detach();
+          })
+      .on_async_request(
           "/async/?",
           [&async_counter](const request& req,
                            const std::shared_ptr<async_response>& res) {

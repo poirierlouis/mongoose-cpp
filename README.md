@@ -185,6 +185,31 @@ http->on_async_request("/long-task", [](const request& req,
 });
 ```
 
+You can send chunked responses asynchronously too:
+```cpp
+http->on_async_request("/long-file", [](const request&,
+                                        const std::shared_ptr<async_response>& res) {
+  std::thread([res]() {
+    const auto stream = res->stream(status_code::ok /*, "gzip, chunked" */);
+    while (stream->wait()) {
+      if (eof) {
+        // termination chunk is sent
+        stream->close();
+        break;
+      }
+
+      std::string chunk;
+      // read from a source
+      stream->send(std::move(chunk));
+    }
+
+    if (stream->failed()) {
+      // something went wrong
+    }
+  }).detach();
+});
+```
+
 ### mTLS
 
 Extraction of client's certificate info is supported for both OpenSSL and
