@@ -5,7 +5,7 @@
 A modern C++20 wrapper around the
 [mongoose](https://github.com/cesanta/mongoose) embedded web server library.
 
-mongoose-cpp provides a clean, expressive API for building HTTP servers in C++,
+**mgxx** provides a clean, expressive API for building HTTP servers in C++,
 hiding the C-level details of Mongoose behind thin, zero-overhead abstractions —
 while preserving full compatibility with embedded and resource-constrained
 targets.
@@ -34,7 +34,7 @@ targets.
 
 ## License
 
-mgxx is licensed under the **GNU General Public License v2.0** (GPL-2.0).
+**mgxx** is licensed under the **GNU General Public License v2.0** (GPL-2.0).
 
 The bundled [mongoose](https://github.com/cesanta/mongoose) library is
 dual-licensed under **GPL-2.0** or a commercial license by Cesanta Software
@@ -213,8 +213,8 @@ backends.
 
 This is an example of the client's certificate info available in the request:
 ```
-Subject: CN=mongoose-cpp-client
-Issuer: CN=mongoose-cpp-ca
+Subject: CN=mgxx-client
+Issuer: CN=mgxx-ca
 Serial Number: 38B175F7211897C00949D2CF8C62E7F39D744359
 Not Before: 1777664143
 Not After: 1809200143

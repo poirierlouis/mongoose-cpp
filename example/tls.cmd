@@ -19,14 +19,14 @@ if exist "%path%\root.key" (
             -out "%path%\root.pem" ^
             -days 730 ^
             -sha512 ^
-            -subj "/CN=mongoose-cpp-ca"
+            -subj "/CN=mgxx-ca"
 
 : Client
 "%openssl%" ecparam -name prime256v1 -genkey -noout -out "%path%\client.key"
 "%openssl%" req -new ^
             -key "%path%\client.key" ^
             -out "%path%\client.csr" ^
-            -subj "/CN=mongoose-cpp-client"
+            -subj "/CN=mgxx-client"
 "%openssl%" x509 -req ^
             -in "%path%\client.csr" ^
             -CA "%path%\root.pem" ^
