@@ -1,15 +1,15 @@
-#include "server.h"
+#include "mgxx/server.hpp"
 
 #include <functional>
 #include <memory>
 #include <ranges>
 
-#include "http/endpoint.h"
-#include "http/remote_context.h"
+#include "mgxx/http/endpoint.hpp"
+#include "mgxx/internal/remote_context.hpp"
 
-namespace mg {
+namespace mgxx {
 void event_manager_handler(mg_connection* conn, const int ev, void* ev_data) {
-  const auto endpoint = static_cast<mg::endpoint*>(conn->fn_data);
+  const auto endpoint = static_cast<mgxx::endpoint*>(conn->fn_data);
   endpoint->handle(conn, ev, ev_data);
 }
 
@@ -21,7 +21,7 @@ void event_manager_context_handler(mg_connection* conn, const int ev,
 }
 
 void event_manager_logger(const char ch, void* param) {
-  auto* server = static_cast<mg::server*>(param);
+  auto* server = static_cast<mgxx::server*>(param);
   auto& [buffer, offset, listener] = server->m_logger;
   buffer[offset++] = ch;
   if (ch == '\n' || offset >= buffer.size()) {
@@ -85,4 +85,4 @@ void server::setup() {
     MG_ERROR(("errmsg=\"Failed to initialize asynchronous mode\""));
   }
 }
-}  // namespace mg
+}  // namespace mgxx

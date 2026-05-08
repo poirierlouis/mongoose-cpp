@@ -1,6 +1,6 @@
-#include "headers.h"
+#include "mgxx/http/headers.hpp"
 
-namespace mg::http {
+namespace mgxx::http {
 size_t headers::size() const { return m_headers.size(); }
 
 bool headers::has(const std::string_view name) const {
@@ -54,4 +54,4 @@ std::string headers::format(const size_t capacity) const {
   }
   return headers;
 }
-}  // namespace mg::http
+}  // namespace mgxx::http

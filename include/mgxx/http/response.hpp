@@ -1,16 +1,16 @@
-#ifndef MONGOOSE_CPP_HTTP_RESPONSE_H
-#define MONGOOSE_CPP_HTTP_RESPONSE_H
+#ifndef MGXX_HTTP_RESPONSE_HPP
+#define MGXX_HTTP_RESPONSE_HPP
 
 #include <mongoose.h>
 
 #include <memory>
 #include <string>
 
-#include "common.h"
-#include "headers.h"
-#include "remote_context.h"
+#include "mgxx/http/headers.hpp"
+#include "mgxx/http/internal/common.hpp"
+#include "mgxx/internal/remote_context.hpp"
 
-namespace mg::http {
+namespace mgxx::http {
 namespace not_found {
 constexpr int k_code = 404;
 constexpr auto k_header = "Content-Type: text/plain\r\n";
@@ -83,6 +83,6 @@ class response {
     m_conn = nullptr;
   }
 };
-}  // namespace mg::http
+}  // namespace mgxx::http
 
-#endif  // MONGOOSE_CPP_HTTP_RESPONSE_H
+#endif  // MGXX_HTTP_RESPONSE_HPP

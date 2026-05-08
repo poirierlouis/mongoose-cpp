@@ -4,10 +4,10 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <mongoose-cpp.hpp>
+#include <mgxx/mgxx.hpp>
 #include <thread>
 
-using namespace mg::http;
+using namespace mgxx::http;
 
 void simple_handler(const request&, const std::shared_ptr<response>& res) {
   res->send(status_code::im_a_teapot,
@@ -27,7 +27,7 @@ class example {
 std::atomic_bool is_running{true};
 
 void signal_handler(int) {
-  std::cout << "[mg::server] Shutting down..." << '\n';
+  std::cout << "[mgxx::server] shutting down..." << '\n';
   is_running = false;
 }
 
@@ -54,16 +54,16 @@ std::optional<int> to_int(const std::string_view str) {
 int main(int, char**) {
   std::signal(SIGINT, &signal_handler);
 
-  mg::server server(
+  mgxx::server server(
       [](const std::string_view message) {
-        std::cout << "[mg::server] " << message;
+        std::cout << "[mgxx::server] " << message;
       },
       MG_LL_DEBUG);
 
 #if MG_TLS == MG_TLS_OPENSSL || MG_TLS == MG_TLS_MBED
   const auto ca = read_file(std::filesystem::absolute("../../../root.pem"));
   if (!ca) {
-    std::cerr << "[mg::server] Failed to load server's root key" << '\n';
+    std::cerr << "[mgxx::server] Failed to load server's root key" << '\n';
     return 1;
   }
 #endif
@@ -72,13 +72,13 @@ int main(int, char**) {
     MG_TLS == MG_TLS_MBED
   const auto cert = read_file(std::filesystem::absolute("../../../server.crt"));
   if (!cert) {
-    std::cerr << "[mg::server] Failed to load server's certificate" << '\n';
+    std::cerr << "[mgxx::server] Failed to load server's certificate" << '\n';
     return 1;
   }
 
   const auto key = read_file(std::filesystem::absolute("../../../server.key"));
   if (!key) {
-    std::cerr << "[mg::server] Failed to load server's key" << '\n';
+    std::cerr << "[mgxx::server] Failed to load server's key" << '\n';
     return 1;
   }
 
@@ -89,7 +89,7 @@ int main(int, char**) {
 
   const auto http = server.listen_http(host);
   if (!http) {
-    std::cerr << "[mg::server] Failed to listen on " << host << '\n';
+    std::cerr << "[mgxx::server] Failed to listen on " << host << '\n';
     return 1;
   }
 
@@ -184,7 +184,7 @@ int main(int, char**) {
       .on_request(
           "/cert",
           [](const request& req, const std::shared_ptr<response>& res) {
-            if (const auto cert = req.get_tls_cert_info().lock()) {
+            if (const auto info = req.get_tls_cert_info().lock()) {
               res->send(
                   status_code::ok,
                   std::format("--- Client certificate ---\n"
@@ -194,9 +194,9 @@ int main(int, char**) {
                               "Not Before:{}\n"
                               "Not After:{}\n"
                               "Fingerprint:{}",
-                              cert->get_subject_name(), cert->get_issuer_name(),
-                              cert->get_serial_number(), cert->get_not_before(),
-                              cert->get_not_after(), cert->get_fingerprint()));
+                              info->get_subject_name(), info->get_issuer_name(),
+                              info->get_serial_number(), info->get_not_before(),
+                              info->get_not_after(), info->get_fingerprint()));
             } else {
               res->send(status_code::bad_request,
                         "No client certificate provided");
@@ -213,7 +213,7 @@ int main(int, char**) {
             std::thread thread([async_req = req.to_async(), res] {
               std::this_thread::sleep_for(std::chrono::seconds(2));
 
-              if (const auto cert = async_req->get_tls_cert_info().lock()) {
+              if (const auto info = async_req->get_tls_cert_info().lock()) {
                 res->send(status_code::ok,
                           std::format(
                               "--- Client certificate ---\n"
@@ -223,9 +223,9 @@ int main(int, char**) {
                               "Not Before:{}\n"
                               "Not After:{}\n"
                               "Fingerprint:{}",
-                              cert->get_subject_name(), cert->get_issuer_name(),
-                              cert->get_serial_number(), cert->get_not_before(),
-                              cert->get_not_after(), cert->get_fingerprint()));
+                              info->get_subject_name(), info->get_issuer_name(),
+                              info->get_serial_number(), info->get_not_before(),
+                              info->get_not_after(), info->get_fingerprint()));
               } else {
                 res->send(status_code::bad_request,
                           "No client certificate provided");

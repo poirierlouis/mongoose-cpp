@@ -1,9 +1,9 @@
-# mongoose-cpp
+# mgxx
 
 ![version: work in progress](https://img.shields.io/badge/version-work%20in%20progress-orange)
 
 A modern C++20 wrapper around the
-[Mongoose](https://github.com/cesanta/mongoose) embedded web server library.
+[mongoose](https://github.com/cesanta/mongoose) embedded web server library.
 
 mongoose-cpp provides a clean, expressive API for building HTTP servers in C++,
 hiding the C-level details of Mongoose behind thin, zero-overhead abstractions —
@@ -34,10 +34,9 @@ targets.
 
 ## License
 
-mongoose-cpp is licensed under the **GNU General Public License v2.0**
-(GPL-2.0).
+mgxx is licensed under the **GNU General Public License v2.0** (GPL-2.0).
 
-The bundled [Mongoose](https://github.com/cesanta/mongoose) library is
+The bundled [mongoose](https://github.com/cesanta/mongoose) library is
 dual-licensed under **GPL-2.0** or a commercial license by Cesanta Software
 Limited. If you intend to use this project in a proprietary/commercial product,
 you must get a commercial license for Mongoose directly from
@@ -50,8 +49,8 @@ example project. It provides options with no TLS, builtin TLS, OpenSSL, and
 mbedTLS support. It only includes support for Windows at the moment.
 
 ```bash
-git clone --recurse-submodules https://github.com/poirierlouis/mongoose-cpp
-cd mongoose-cpp
+git clone --recurse-submodules https://github.com/poirierlouis/mgxx.git
+cd mgxx
 cmake -B build --preset example-win-openssl
 cmake --build build --config Release
 ```
@@ -62,13 +61,13 @@ cmake --build build --config Release
 
 ```cpp
 // ...
-#include <mongoose-cpp.hpp>
+#include <mgxx/mgxx.hpp>
 
-using namespace mg::http;
+using namespace mgxx::http;
 
 int main() {
   // Optional: setup a custom logger
-  mg::server server([](std::string_view msg) {
+  mgxx::server server([](std::string_view msg) {
     std::cout << "[log] " << msg;
   }, MG_LL_INFO);
 
@@ -84,16 +83,10 @@ int main() {
   });
 
   // Parameterized route with capture groups
-  http->on_request("/user/?", [](const request& req,
+  http->on_request("/user/*", [](const request& req,
                                  const std::shared_ptr<response>& res) {
     const auto name = req.get_param(0).value_or("unknown");
     res->send(status_code::ok, std::format("Hello, {}!", name));
-  });
-
-  // JSON response
-  http->on_request("/api/status", [](const request&,
-                                     const std::shared_ptr<response>& res) {
-    res->send_json(status_code::ok, R"({"status": "up"})");
   });
 
   while (true) {
@@ -125,6 +118,8 @@ http->on_request("/secure", [](const request& req,
                                const std::shared_ptr<response>& res) {
   if (const auto info = req.get_tls_cert_info().lock()) {
     res->send(status_code::ok, "Welcome, " + info->get_subject_name());
+  } else {
+    res->send(status_code::unauthorized, "Unauthorized");
   }
 });
 ```

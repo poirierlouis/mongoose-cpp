@@ -1,22 +1,24 @@
 cmake_minimum_required(VERSION 3.15)
-project(mongoose_cpp)
+project(mgxx)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ##
 # Options
 #
-set(MGPP_TLS "builtin" CACHE STRING "TLS backend to use: none, builtin, openssl, mbedtls")
-set_property(CACHE MGPP_TLS PROPERTY STRINGS "none" "builtin" "openssl" "mbedtls")
-string(TOLOWER "${MGPP_TLS}" MGPP_TLS_LOWER)
+set(MGXX_TLS "builtin" CACHE STRING "TLS backend to use: none, builtin, openssl, mbedtls")
+set_property(CACHE MGXX_TLS PROPERTY STRINGS "none" "builtin" "openssl" "mbedtls")
+string(TOLOWER "${MGXX_TLS}" MGXX_TLS_LOWER)
 
 # TODO: add option/definition to let end-user disable exceptions
 
-if("${CMAKE_PROJECT_NAME}" STREQUAL "mongoose_cpp")
-    option(BUILD_EXAMPLES "Build examples" ON)
-else()
-    option(BUILD_EXAMPLES "Build examples" OFF)
+set(MGXX_BUILD_EXAMPLES_DEFAULT OFF)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    set(MGXX_BUILD_EXAMPLES_DEFAULT ON)
 endif()
+
+option(MGXX_BUILD_EXAMPLES "Build example" ${MGXX_BUILD_EXAMPLES_DEFAULT})
 
 ##
 # Static library
@@ -37,12 +39,16 @@ add_library(${PROJECT_NAME} STATIC
 
         vendors/mongoose/mongoose.c
 )
+add_library(mgxx::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-        src/
-        src/http/
-
-        vendors/mongoose/
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vendors/mongoose/>
+            $<INSTALL_INTERFACE:include>
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 if (MSVC)
@@ -54,11 +60,12 @@ endif ()
 
 ##
 # Configure TLS
-if (MGPP_TLS_LOWER STREQUAL "builtin")
+#
+if (MGXX_TLS_LOWER STREQUAL "builtin")
     target_compile_definitions(${PROJECT_NAME} PUBLIC MG_TLS=MG_TLS_BUILTIN)
 
     message(STATUS "TLS enabled (builtin)")
-elseif (MGPP_TLS_LOWER STREQUAL "openssl")
+elseif (MGXX_TLS_LOWER STREQUAL "openssl")
     target_compile_definitions(${PROJECT_NAME} PUBLIC MG_TLS=MG_TLS_OPENSSL)
 
     find_package(OpenSSL REQUIRED)
@@ -68,7 +75,7 @@ elseif (MGPP_TLS_LOWER STREQUAL "openssl")
             OpenSSL::Crypto)
 
     message(STATUS "TLS enabled (OpenSSL)")
-elseif (MGPP_TLS_LOWER STREQUAL "mbedtls")
+elseif (MGXX_TLS_LOWER STREQUAL "mbedtls")
     target_compile_definitions(${PROJECT_NAME} PUBLIC MG_TLS=MG_TLS_MBED)
 
     find_package(MbedTLS REQUIRED)
@@ -79,7 +86,7 @@ elseif (MGPP_TLS_LOWER STREQUAL "mbedtls")
             MbedTLS::mbedx509)
 
     message(STATUS "TLS enabled (Mbed-TLS)")
-#elseif (MGPP_TLS_LOWER STREQUAL "wolfssl")
+#elseif (MGXX_TLS_LOWER STREQUAL "wolfssl")
 #    TODO: find package and use
 #
 #    message(STATUS "TLS enabled (wolfSSL)")
@@ -89,7 +96,7 @@ else ()
     message(STATUS "TLS is disabled")
 endif ()
 
-if (BUILD_EXAMPLES)
+if (MGXX_BUILD_EXAMPLES)
     message(STATUS "Configuring examples...")
     add_subdirectory(example)
 endif ()

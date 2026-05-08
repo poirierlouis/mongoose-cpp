@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_HTTP_ASYNC_RESPONSE_H
-#define MONGOOSE_CPP_HTTP_ASYNC_RESPONSE_H
+#ifndef MGXX_HTTP_ASYNC_RESPONSE_HPP
+#define MGXX_HTTP_ASYNC_RESPONSE_HPP
 
 #include <mongoose.h>
 
@@ -7,11 +7,11 @@
 #include <memory>
 #include <string>
 
-#include "async_stream.h"
-#include "common.h"
-#include "headers.h"
+#include "mgxx/http/async_stream.hpp"
+#include "mgxx/http/headers.hpp"
+#include "mgxx/http/internal/common.hpp"
 
-namespace mg::http {
+namespace mgxx::http {
 class endpoint;
 
 class async_response {
@@ -62,6 +62,6 @@ class async_response {
   std::shared_ptr<async_stream> stream(int code,
                                        std::string encoding = "chunked");
 };
-}  // namespace mg::http
+}  // namespace mgxx::http
 
-#endif  // MONGOOSE_CPP_HTTP_ASYNC_RESPONSE_H
+#endif  // MGXX_HTTP_ASYNC_RESPONSE_HPP

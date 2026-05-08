@@ -1,8 +1,6 @@
-#include "async_stream.h"
+#include "mgxx/http/async_stream.hpp"
 
-#include "mongoose.h"
-
-namespace mg::http {
+namespace mgxx::http {
 async_stream::async_stream(std::weak_ptr<mg_mgr> mgr, const unsigned long conn,
                            const size_t id, std::string preamble)
     : m_mgr(std::move(mgr)),
@@ -73,4 +71,4 @@ void async_stream::mark_failed() {
   m_state.store(state::failed, std::memory_order_release);
   m_state.notify_all();
 }
-}  // namespace mg::http
+}  // namespace mgxx::http

@@ -1,12 +1,10 @@
-#include "endpoint.h"
+#include "mgxx/endpoint.hpp"
 
-namespace mg {
-
+namespace mgxx {
 endpoint::endpoint(std::weak_ptr<mg_mgr> mgr, std::string host)
     : m_host(std::move(host)), m_conn(nullptr), m_mgr(std::move(mgr)) {}
 
 std::string_view endpoint::get_host() const { return m_host; }
 
 void endpoint::setup(mg_connection* conn) { m_conn = conn; }
-
-}  // namespace mg
+}  // namespace mgxx

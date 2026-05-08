@@ -1,6 +1,8 @@
-#include "async_request.h"
+#include "mgxx/http/async_request.hpp"
 
-namespace mg::http {
+#include "mgxx/internal/remote_context.hpp"
+
+namespace mgxx::http {
 async_request::async_request(const mg_http_message* msg)
     : async_request(msg, {}, {}, {}) {}
 
@@ -89,4 +91,4 @@ std::optional<std::string_view> async_request::get_header(
 std::string_view async_request::body() const {
   return {m_msg.body.buf, m_msg.body.len};
 }
-}  // namespace mg::http
+}  // namespace mgxx::http

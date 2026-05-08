@@ -1,62 +1,27 @@
-#ifndef MONGOOSE_CPP_HTTP_REMOTE_CONTEXT_H
-#define MONGOOSE_CPP_HTTP_REMOTE_CONTEXT_H
+#ifndef MGXX_HTTP_REMOTE_CONTEXT_HPP
+#define MGXX_HTTP_REMOTE_CONTEXT_HPP
 
 #include <mongoose.h>
 
 #include <chrono>
 #include <string>
 
-#include "../endpoint.h"
-#include "common.h"
+#include "mgxx/endpoint.hpp"
+#include "mgxx/http/internal/common.hpp"
+#include "mgxx/tls.hpp"
 
-namespace mg::http {
+namespace mgxx::http {
 class remote_context;
 class async_stream;
 
-class tls_cert_info {
-  std::string buffer;
-
-  std::string_view subject_name;
-  std::string_view issuer_name;
-  std::string_view serial_number;
-
-  std::string_view not_before;
-  std::string_view not_after;
-
-  std::string_view fingerprint;
-
-  friend class remote_context;
-
- public:
-  tls_cert_info() = default;
-  ~tls_cert_info() = default;
-
-  tls_cert_info(const tls_cert_info&) = delete;
-  tls_cert_info& operator=(const tls_cert_info&) = delete;
-
-  tls_cert_info(tls_cert_info&&) = delete;
-  tls_cert_info& operator=(tls_cert_info&&) = delete;
-
-  [[nodiscard]] std::string_view get_subject_name() const {
-    return subject_name;
-  }
-  [[nodiscard]] std::string_view get_issuer_name() const { return issuer_name; }
-  [[nodiscard]] std::string_view get_serial_number() const {
-    return serial_number;
-  }
-  [[nodiscard]] std::string_view get_not_before() const { return not_before; }
-  [[nodiscard]] std::string_view get_not_after() const { return not_after; }
-  [[nodiscard]] std::string_view get_fingerprint() const { return fingerprint; }
-};
-
 class remote_context {
-  mg::endpoint* m_endpoint;
+  mgxx::endpoint* m_endpoint;
   std::string m_ip;
   std::shared_ptr<tls_cert_info> m_tls_cert;
   std::unique_ptr<stream_producer> m_stream;
 
  public:
-  explicit remote_context(mg::endpoint* endpoint, const mg_connection* conn);
+  explicit remote_context(mgxx::endpoint* endpoint, const mg_connection* conn);
   ~remote_context() = default;
 
   [[nodiscard]] std::string_view get_remote_ip() const;
@@ -114,6 +79,6 @@ struct mg_tls {
   size_t throttled_len;
 };
 #endif
-}  // namespace mg::http
+}  // namespace mgxx::http
 
-#endif  // MONGOOSE_CPP_HTTP_REMOTE_CONTEXT_H
+#endif  // MGXX_HTTP_REMOTE_CONTEXT_H

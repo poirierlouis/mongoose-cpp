@@ -1,9 +1,9 @@
-#ifndef MONGOOSE_CPP_SUPPLIER_H
-#define MONGOOSE_CPP_SUPPLIER_H
+#ifndef MGXX_SUPPLIER_HPP
+#define MGXX_SUPPLIER_HPP
 
 #include <utility>
 
-namespace mg {
+namespace mgxx {
 template <typename T>
 class supplier {
  public:
@@ -23,6 +23,6 @@ class lambda_supplier : public supplier<T> {
 
   T get() override { return m_callback(); }
 };
-}  // namespace mg
+}  // namespace mgxx
 
-#endif  // MONGOOSE_CPP_SUPPLIER_H
+#endif  // MGXX_SUPPLIER_HPP

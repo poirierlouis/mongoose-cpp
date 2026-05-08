@@ -1,13 +1,13 @@
-#include "endpoint.h"
+#include "mgxx/http/endpoint.hpp"
 
 #include <ranges>
 
-#include "remote_context.h"
-#include "server.h"
+#include "mgxx/internal/remote_context.hpp"
+#include "mgxx/server.hpp"
 
-namespace mg::http {
+namespace mgxx::http {
 endpoint::endpoint(std::weak_ptr<mg_mgr> mgr, std::string host)
-    : mg::endpoint(std::move(mgr), std::move(host)) {}
+    : mgxx::endpoint(std::move(mgr), std::move(host)) {}
 
 endpoint::~endpoint() {
   if (m_tls_alloc) {
@@ -309,4 +309,4 @@ size_t endpoint::count_groups(const std::string_view path) {
   }
   return groups;
 }
-}  // namespace mg::http
+}  // namespace mgxx::http

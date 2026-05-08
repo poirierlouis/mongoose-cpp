@@ -1,18 +1,18 @@
-#ifndef MONGOOSE_CPP_HTTP_COMMON_H
-#define MONGOOSE_CPP_HTTP_COMMON_H
+#ifndef MGXX_HTTP_COMMON_HPP
+#define MGXX_HTTP_COMMON_HPP
 
 #include <mongoose.h>
 
 #include <optional>
 #include <string>
 
-#include "supplier.h"
+#include "mgxx/supplier.hpp"
 
-namespace mg {
+namespace mgxx {
 std::string format_ip(const mg_addr* ip);
-}  // namespace mg
+}  // namespace mgxx
 
-namespace mg::http {
+namespace mgxx::http {
 using stream_producer = supplier<std::optional<std::string>>;
 template <typename F>
 using lambda_stream_producer = lambda_supplier<std::optional<std::string>, F>;
@@ -164,6 +164,6 @@ enum class status_code : int {
 
   max = 1023
 };
-}  // namespace mg::http
+}  // namespace mgxx::http
 
-#endif  // MONGOOSE_CPP_HTTP_COMMON_H
+#endif  // MGXX_HTTP_COMMON_HPP

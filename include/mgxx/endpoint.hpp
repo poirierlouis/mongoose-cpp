@@ -1,20 +1,20 @@
-#ifndef MONGOOSE_CPP_ENDPOINT_H
-#define MONGOOSE_CPP_ENDPOINT_H
+#ifndef MGXX_ENDPOINT_HPP
+#define MGXX_ENDPOINT_HPP
 
 #include <mongoose.h>
 
 #include <memory>
 #include <string>
 
-namespace mg {
+namespace mgxx {
 class server;
 
 namespace http {
 class remote_context;
 }
-}  // namespace mg
+}  // namespace mgxx
 
-namespace mg {
+namespace mgxx {
 class endpoint {
   friend void event_manager_handler(mg_connection*, int, void*);
 
@@ -23,8 +23,8 @@ class endpoint {
 
   void setup(mg_connection* conn);
 
-  friend class mg::server;
-  friend class mg::http::remote_context;
+  friend class mgxx::server;
+  friend class mgxx::http::remote_context;
 
  protected:
   std::weak_ptr<mg_mgr> m_mgr;
@@ -37,6 +37,6 @@ class endpoint {
 
   [[nodiscard]] std::string_view get_host() const;
 };
-}  // namespace mg
+}  // namespace mgxx
 
-#endif  // MONGOOSE_CPP_ENDPOINT_H
+#endif  // MGXX_ENDPOINT_HPP

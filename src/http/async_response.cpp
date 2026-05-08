@@ -1,8 +1,8 @@
-#include "async_response.h"
+#include "mgxx/http/async_response.hpp"
 
 #include <format>
 
-namespace mg::http {
+namespace mgxx::http {
 async_response::async_response(const unsigned long conn,
                                std::weak_ptr<mg_mgr> mgr, const size_t id)
     : m_conn(conn), m_mgr(std::move(mgr)), m_id(id) {}
@@ -91,4 +91,4 @@ async_response::state async_response::get_state() const {
 std::shared_ptr<async_stream> async_response::get_stream() {
   return std::move(m_stream);
 }
-}  // namespace mg::http
+}  // namespace mgxx::http

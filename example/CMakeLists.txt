@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
-project(mongoose_cpp_example)
+project(mgxx_example)
+
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
@@ -18,7 +20,7 @@ else ()
     message(WARNING "OpenSSL not found. Please generate certificates manually.")
 endif ()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE mongoose_cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE mgxx::mgxx)
 if (MSVC)
     target_compile_definitions(${PROJECT_NAME} PRIVATE _HAS_EXCEPTIONS=0)
     target_compile_options(${PROJECT_NAME} PRIVATE /GR- /EHs- /EHc- /Zc:throwingNew-)
