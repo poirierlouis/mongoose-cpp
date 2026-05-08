@@ -1,13 +1,13 @@
-#ifndef MONGOOSE_CPP_HTTP_LISTENER_H
-#define MONGOOSE_CPP_HTTP_LISTENER_H
+#ifndef MGXX_HTTP_LISTENER_HPP
+#define MGXX_HTTP_LISTENER_HPP
 
 #include <memory>
 
-#include "async_response.h"
-#include "request.h"
-#include "response.h"
+#include "mgxx/http/async_response.hpp"
+#include "mgxx/http/request.hpp"
+#include "mgxx/http/response.hpp"
 
-namespace mg::http {
+namespace mgxx::http {
 class listener {
   const size_t m_groups;
   const bool m_is_async;
@@ -41,6 +41,6 @@ class lambda_http_listener : public listener {
   }
 };
 
-}  // namespace mg::http
+}  // namespace mgxx::http
 
-#endif  // MONGOOSE_CPP_HTTP_LISTENER_H
+#endif  // MGXX_HTTP_LISTENER_HPP

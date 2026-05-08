@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_SERVER_H
-#define MONGOOSE_CPP_SERVER_H
+#ifndef MGXX_SERVER_HPP
+#define MGXX_SERVER_HPP
 
 #include <mongoose.h>
 
@@ -7,15 +7,15 @@
 #include <string>
 #include <vector>
 
-#include "endpoint.h"
-#include "http/endpoint.h"
-#include "logger_listener.h"
+#include "mgxx/endpoint.hpp"
+#include "mgxx/http/endpoint.hpp"
+#include "mgxx/internal/logger_listener.hpp"
 
 #ifdef poll
 #undef poll
 #endif
 
-namespace mg {
+namespace mgxx {
 void event_manager_handler(mg_connection* conn, int ev, void* ev_data);
 void event_manager_context_handler(mg_connection* conn, int ev, void* ev_data);
 void event_manager_logger(char ch, void* param);
@@ -66,6 +66,6 @@ class server {
   std::shared_ptr<http::endpoint> listen_http(const std::string& host);
   void poll(int ms = 0) const;
 };
-}  // namespace mg
+}  // namespace mgxx
 
-#endif  // MONGOOSE_CPP_SERVER_H
+#endif  // MGXX_SERVER_HPP

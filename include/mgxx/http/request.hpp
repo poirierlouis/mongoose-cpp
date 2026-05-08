@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_HTTP_ASYNC_REQUEST_H
-#define MONGOOSE_CPP_HTTP_ASYNC_REQUEST_H
+#ifndef MGXX_HTTP_REQUEST_HPP
+#define MGXX_HTTP_REQUEST_HPP
 
 #include <mongoose.h>
 
@@ -9,27 +9,26 @@
 #include <string_view>
 #include <vector>
 
-#include "remote_context.h"
+#include "mgxx/http/async_request.hpp"
+#include "mgxx/internal/remote_context.hpp"
 
-namespace mg::http {
-class async_request {
-  mg_http_message m_msg{};
+namespace mgxx::http {
+class request {
+  mg_http_message* m_msg;
   std::vector<mg_str> m_groups;
-  std::string m_ip;
+  std::string_view m_ip;
   std::weak_ptr<tls_cert_info> m_tls_cert_info;
 
  public:
-  explicit async_request(const mg_http_message* msg);
-  explicit async_request(const mg_http_message* msg, std::vector<mg_str> groups,
-                         std::string_view ip,
-                         std::weak_ptr<tls_cert_info> tls_cert_info);
-  ~async_request();
+  explicit request(mg_http_message* msg, const remote_context& context);
+  explicit request(mg_http_message* msg, const remote_context& context,
+                   std::vector<mg_str> groups);
 
-  async_request(const async_request&) = delete;
-  async_request& operator=(const async_request&) = delete;
+  request(const request&) = delete;
+  request& operator=(const request&) = delete;
 
-  async_request(async_request&&) noexcept = delete;
-  async_request& operator=(async_request&&) = delete;
+  request(request&&) noexcept = default;
+  request& operator=(request&&) = default;
 
   [[nodiscard]] std::string_view get_remote_ip() const;
   [[nodiscard]] std::weak_ptr<tls_cert_info> get_tls_cert_info() const;
@@ -42,7 +41,9 @@ class async_request {
   [[nodiscard]] std::optional<std::string_view> get_header(
       const std::string& name) const;
   [[nodiscard]] std::string_view body() const;
-};
-}  // namespace mg::http
 
-#endif  // MONGOOSE_CPP_HTTP_ASYNC_REQUEST_H
+  [[nodiscard]] std::unique_ptr<async_request> to_async() const;
+};
+}  // namespace mgxx::http
+
+#endif  // MGXX_HTTP_REQUEST_HPP

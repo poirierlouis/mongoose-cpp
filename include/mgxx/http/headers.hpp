@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_HTTP_HEADERS_H
-#define MONGOOSE_CPP_HTTP_HEADERS_H
+#ifndef MGXX_HTTP_HEADERS_HPP
+#define MGXX_HTTP_HEADERS_HPP
 
 #include <algorithm>
 #include <optional>
@@ -7,7 +7,7 @@
 #include <string_view>
 #include <unordered_map>
 
-namespace mg::http {
+namespace mgxx::http {
 class headers {
   struct case_insensitive_hash {
     using is_transparent = void;
@@ -74,6 +74,6 @@ class headers {
 
   [[nodiscard]] std::string format(size_t capacity = 0) const;
 };
-}  // namespace mg::http
+}  // namespace mgxx::http
 
-#endif  // MONGOOSE_CPP_HTTP_HEADERS_H
+#endif  // MGXX_HTTP_HEADERS_HPP

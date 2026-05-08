@@ -1,9 +1,9 @@
-#ifndef MONGOOSE_CPP_LISTENER_H
-#define MONGOOSE_CPP_LISTENER_H
+#ifndef MGXX_LISTENER_HPP
+#define MGXX_LISTENER_HPP
 
 #include <utility>
 
-namespace mg {
+namespace mgxx {
 template <typename... Args>
 class listener {
  public:
@@ -25,6 +25,6 @@ class lambda_listener : public listener<Args...> {
     m_callback(std::forward<Args>(args)...);
   }
 };
-}  // namespace mg
+}  // namespace mgxx
 
-#endif  // MONGOOSE_CPP_LISTENER_H
+#endif  // MGXX_LISTENER_HPP

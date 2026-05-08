@@ -1,6 +1,4 @@
-#include "common.h"
-
-#include <mongoose.h>
+#include "mgxx/http/internal/common.hpp"
 
 #include <format>
 
@@ -10,7 +8,7 @@
 #include <arpa/inet.h>
 #endif
 
-namespace mg {
+namespace mgxx {
 std::string format_ip(const mg_addr* ip) {
   if (ip->is_ip6) {
     char buffer[INET6_ADDRSTRLEN];
@@ -22,4 +20,4 @@ std::string format_ip(const mg_addr* ip) {
   inet_ntop(AF_INET, &ip->addr.ip, buffer, sizeof(buffer));
   return std::format("{}:{}", buffer, mg_ntohs(ip->port));
 }
-}  // namespace mg
+}  // namespace mgxx

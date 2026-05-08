@@ -1,6 +1,6 @@
-#include "response.h"
+#include "mgxx/http/response.hpp"
 
-namespace mg::http {
+namespace mgxx::http {
 response::response(mg_connection* conn) : m_conn(conn) {}
 
 headers& response::get_headers() { return m_headers; }
@@ -24,4 +24,4 @@ void response::send(const int code, const std::string& body) {
   mg_http_reply(m_conn, code, headers.c_str(), "%s\n", body.c_str());
   m_conn = nullptr;
 }
-}  // namespace mg::http
+}  // namespace mgxx::http

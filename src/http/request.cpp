@@ -1,6 +1,6 @@
-#include "request.h"
+#include "mgxx/http/request.hpp"
 
-namespace mg::http {
+namespace mgxx::http {
 request::request(mg_http_message* msg, const remote_context& context)
     : request(msg, context, {}) {}
 
@@ -57,4 +57,4 @@ std::unique_ptr<async_request> request::to_async() const {
   return std::make_unique<async_request>(m_msg, m_groups, m_ip,
                                          m_tls_cert_info);
 }
-}  // namespace mg::http
+}  // namespace mgxx::http

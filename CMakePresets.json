@@ -13,13 +13,13 @@
       }
     },
 
-    {"name": "tls-none", "hidden": true, "cacheVariables": {"MGPP_TLS": "none"}},
-    {"name": "tls-builtin", "hidden": true, "cacheVariables": {"MGPP_TLS": "builtin"}},
-    {"name": "tls-openssl", "hidden": true, "cacheVariables": {"MGPP_TLS": "openssl"}},
-    {"name": "tls-mbedtls", "hidden": true, "cacheVariables": {"MGPP_TLS": "mbedtls"}},
+    {"name": "tls-none", "hidden": true, "cacheVariables": {"MGXX_TLS": "none"}},
+    {"name": "tls-builtin", "hidden": true, "cacheVariables": {"MGXX_TLS": "builtin"}},
+    {"name": "tls-openssl", "hidden": true, "cacheVariables": {"MGXX_TLS": "openssl"}},
+    {"name": "tls-mbedtls", "hidden": true, "cacheVariables": {"MGXX_TLS": "mbedtls"}},
 
-    {"name": "example", "hidden": true, "cacheVariables": {"BUILD_EXAMPLES": "ON"}},
-    {"name": "no-example", "hidden": true, "cacheVariables": {"BUILD_EXAMPLES": "OFF"}},
+    {"name": "example", "hidden": true, "cacheVariables": {"MGXX_BUILD_EXAMPLES_DEFAULT": "ON"}},
+    {"name": "no-example", "hidden": true, "cacheVariables": {"MGXX_BUILD_EXAMPLES_DEFAULT": "OFF"}},
 
     {"name": "lib-win", "displayName": "Static Library", "inherits": ["base-win", "tls-none", "no-example"]},
     {"name": "lib-win-tls", "displayName": "Static Library w/ TLS builtin", "inherits": ["base-win", "tls-builtin", "no-example"]},

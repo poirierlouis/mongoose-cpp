@@ -1,5 +1,5 @@
-#ifndef MONGOOSE_CPP_HTTP_ENDPOINT_H
-#define MONGOOSE_CPP_HTTP_ENDPOINT_H
+#ifndef MGXX_HTTP_ENDPOINT_HPP
+#define MGXX_HTTP_ENDPOINT_HPP
 
 #include <mongoose.h>
 
@@ -7,12 +7,13 @@
 #include <string>
 #include <unordered_map>
 
-#include "async_response.h"
-#include "endpoint.h"
-#include "listener.h"
+#include "mgxx/endpoint.hpp"
+#include "mgxx/http/async_response.hpp"
+#include "mgxx/http/listener.hpp"
+#include "mgxx/http/response.hpp"
 
-namespace mg::http {
-class endpoint : public mg::endpoint {
+namespace mgxx::http {
+class endpoint : public mgxx::endpoint {
   using responses = std::unordered_map<size_t, std::shared_ptr<async_response>>;
   using streams = std::unordered_map<size_t, std::shared_ptr<async_stream>>;
 
@@ -89,6 +90,6 @@ class endpoint : public mg::endpoint {
     return *this;
   }
 };
-}  // namespace mg::http
+}  // namespace mgxx::http
 
-#endif  // MONGOOSE_CPP_HTTP_ENDPOINT_H
+#endif  // MGXX_HTTP_ENDPOINT_HPP

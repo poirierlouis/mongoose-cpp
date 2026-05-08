@@ -1,9 +1,9 @@
-#include "remote_context.h"
+#include "mgxx/internal/remote_context.hpp"
 
-#include "async_stream.h"
+#include "mgxx/http/async_stream.hpp"
 
-namespace mg::http {
-remote_context::remote_context(mg::endpoint* endpoint,
+namespace mgxx::http {
+remote_context::remote_context(mgxx::endpoint* endpoint,
                                const mg_connection* conn)
     : m_endpoint(endpoint), m_ip(format_ip(&conn->rem)), m_stream(nullptr) {}
 
@@ -248,4 +248,4 @@ void remote_context::pump_async_stream(
 
   stream->mark_empty();
 }
-}  // namespace mg::http
+}  // namespace mgxx::http
