@@ -18,7 +18,7 @@ targets.
 - Fallback handler support (404)
 - TLS/HTTPS support (built-in, OpenSSL, mbedTLS)
 - Two-way TLS (mTLS) with client certificate extraction
-- Custom logging with configurable levels and callbacks
+- Custom logging with configurable level and callback
 - `std::string_view` based request accessors (zero-copy)
 - No exceptions, no RTTI — suitable for embedded use
 - Mongoose vendored as a git submodule — no external dependencies
@@ -56,6 +56,31 @@ cmake --build build --config Release
 ```
 
 ## Usage
+
+### Setup with CMake
+
+```cmake
+# ...
+
+# Optionally customize mongoose's constants
+set(MG_ENABLE_IPV6 "1" CACHE STRING "" FORCE)
+set(MG_IO_SIZE "32768" CACHE STRING "" FORCE)
+set(MG_MAX_RECV_SIZE "10485760" CACHE STRING "" FORCE)
+set(MG_MAX_HTTP_HEADERS "60" CACHE STRING "" FORCE)
+
+# Add dependency from GitHub directly
+FetchContent_Declare(
+        mgxx
+        GIT_REPOSITORY https://github.com/poirierlouis/mgxx.git
+        GIT_TAG main
+)
+FetchContent_MakeAvailable(mgxx)
+
+# Link the library
+target_link_libraries(${PROJECT_NAME} PRIVATE mgxx::mgxx)
+
+# ...
+```
 
 ### Simple Server
 
