@@ -13,12 +13,17 @@ set(MG_IO_SIZE "32768" CACHE STRING "" FORCE)
 
 find_program(OPENSSL_BIN openssl)
 if (OPENSSL_BIN)
+    if(WIN32)
+        set(TLS_SCRIPT "${CMAKE_SOURCE_DIR}/examples/tls.cmd")
+    else()
+        set(TLS_SCRIPT "${CMAKE_SOURCE_DIR}/examples/tls.sh")
+    endif()
+
     add_custom_command(
             TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND "${CMAKE_SOURCE_DIR}/examples/tls.cmd" "${OPENSSL_BIN}" "${CMAKE_SOURCE_DIR}/build"
+            COMMAND "${TLS_SCRIPT}" "${OPENSSL_BIN}" "${CMAKE_SOURCE_DIR}/build"
             COMMENT "Generating self-signed certificates..."
     )
-    target_sources(${PROJECT_NAME} PRIVATE "${CERT_FILE}" "${KEY_FILE}")
 else ()
     message(WARNING "OpenSSL not found. Please generate certificates manually.")
 endif ()
