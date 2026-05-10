@@ -13,12 +13,22 @@ string(TOLOWER "${MGXX_TLS}" MGXX_TLS_LOWER)
 
 # TODO: add option/definition to let end-user disable exceptions
 
+##
+# Mongoose constants
+#
+set(MG_ENABLE_IPV6 "0" CACHE STRING "Mongoose: enable IPv6. (default is 0)")
+set(MG_IO_SIZE "2048" CACHE STRING "Mongoose: granularity of the send/recv IO buffer growth. It also sets the maximum UDP message size. (default is 2048)")
+set(MG_MAX_RECV_SIZE "3145728" CACHE STRING "Mongoose: maximum recv buffer size. If a connection's receive buffer grows more, the connection gets closed automatically. (default is 3145728)")
+set(MG_MAX_HTTP_HEADERS "40" CACHE STRING "Mongoose: maximum number of HTTP headers. (default is 40)")
+
+##
+# Optionally build examples
+#
 set(MGXX_BUILD_EXAMPLES_DEFAULT OFF)
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(MGXX_BUILD_EXAMPLES_DEFAULT ON)
 endif()
-
-option(MGXX_BUILD_EXAMPLES "Build example" ${MGXX_BUILD_EXAMPLES_DEFAULT})
+option(MGXX_BUILD_EXAMPLES "Build examples" ${MGXX_BUILD_EXAMPLES_DEFAULT})
 
 ##
 # Static library
@@ -51,6 +61,12 @@ target_include_directories(${PROJECT_NAME}
             ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+        MG_ENABLE_IPV6=${MG_ENABLE_IPV6}
+        MG_IO_SIZE=${MG_IO_SIZE}
+        MG_MAX_RECV_SIZE=${MG_MAX_RECV_SIZE}
+        MG_MAX_HTTP_HEADERS=${MG_MAX_HTTP_HEADERS}
+)
 if (MSVC)
     target_compile_definitions(${PROJECT_NAME} PRIVATE _HAS_EXCEPTIONS=0)
     target_compile_options(${PROJECT_NAME} PRIVATE /GR- /EHs- /EHc- /Zc:throwingNew-)
