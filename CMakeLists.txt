@@ -30,6 +30,11 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 option(MGXX_BUILD_EXAMPLES "Build examples" ${MGXX_BUILD_EXAMPLES_DEFAULT})
 
+if (MGXX_BUILD_EXAMPLES)
+    message(STATUS "Configuring examples...")
+    add_subdirectory(examples)
+endif ()
+
 ##
 # Static library
 #
@@ -110,9 +115,4 @@ else ()
     target_compile_definitions(${PROJECT_NAME} PUBLIC MG_TLS=MG_TLS_NONE)
 
     message(STATUS "TLS is disabled")
-endif ()
-
-if (MGXX_BUILD_EXAMPLES)
-    message(STATUS "Configuring examples...")
-    add_subdirectory(example)
 endif ()

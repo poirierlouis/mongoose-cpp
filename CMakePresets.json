@@ -18,18 +18,18 @@
     {"name": "tls-openssl", "hidden": true, "cacheVariables": {"MGXX_TLS": "openssl"}},
     {"name": "tls-mbedtls", "hidden": true, "cacheVariables": {"MGXX_TLS": "mbedtls"}},
 
-    {"name": "example", "hidden": true, "cacheVariables": {"MGXX_BUILD_EXAMPLES_DEFAULT": "ON"}},
-    {"name": "no-example", "hidden": true, "cacheVariables": {"MGXX_BUILD_EXAMPLES_DEFAULT": "OFF"}},
+    {"name": "examples", "hidden": true, "cacheVariables": {"MGXX_BUILD_EXAMPLES_DEFAULT": "ON"}},
+    {"name": "no-examples", "hidden": true, "cacheVariables": {"MGXX_BUILD_EXAMPLES_DEFAULT": "OFF"}},
 
-    {"name": "lib-win", "displayName": "Static Library", "inherits": ["base-win", "tls-none", "no-example"]},
-    {"name": "lib-win-tls", "displayName": "Static Library w/ TLS builtin", "inherits": ["base-win", "tls-builtin", "no-example"]},
-    {"name": "lib-win-openssl", "displayName": "Static Library w/ OpenSSL", "inherits": ["base-win", "tls-openssl", "no-example"]},
-    {"name": "lib-win-mbedtls", "displayName": "Static Library w/ Mbed-TLS", "inherits": ["base-win", "tls-mbedtls", "no-example"]},
+    {"name": "lib-win", "displayName": "Static Library", "inherits": ["base-win", "tls-none", "no-examples"]},
+    {"name": "lib-win-tls", "displayName": "Static Library w/ TLS builtin", "inherits": ["base-win", "tls-builtin", "no-examples"]},
+    {"name": "lib-win-openssl", "displayName": "Static Library w/ OpenSSL", "inherits": ["base-win", "tls-openssl", "no-examples"]},
+    {"name": "lib-win-mbedtls", "displayName": "Static Library w/ Mbed-TLS", "inherits": ["base-win", "tls-mbedtls", "no-examples"]},
 
-    {"name": "example-win", "displayName": "Example", "inherits": ["base-win", "tls-none", "example"]},
-    {"name": "example-win-tls", "displayName": "Example w/ TLS builtin", "inherits": ["base-win", "tls-builtin", "example"]},
-    {"name": "example-win-openssl", "displayName": "Example w/ OpenSSL", "inherits": ["base-win", "tls-openssl", "example"]},
-    {"name": "example-win-mbedtls", "displayName": "Example w/ Mbed-TLS", "inherits": ["base-win", "tls-mbedtls", "example"]}
+    {"name": "examples-win", "displayName": "Examples", "inherits": ["base-win", "tls-none", "examples"]},
+    {"name": "examples-win-tls", "displayName": "Examples w/ TLS builtin", "inherits": ["base-win", "tls-builtin", "examples"]},
+    {"name": "examples-win-openssl", "displayName": "Examples w/ OpenSSL", "inherits": ["base-win", "tls-openssl", "examples"]},
+    {"name": "examples-win-mbedtls", "displayName": "Examples w/ Mbed-TLS", "inherits": ["base-win", "tls-mbedtls", "examples"]}
   ],
   "buildPresets": []
 }

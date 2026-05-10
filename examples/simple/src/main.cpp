@@ -54,6 +54,9 @@ std::optional<int> to_int(const std::string_view str) {
 int main(int, char**) {
   std::signal(SIGINT, &signal_handler);
 
+  const std::filesystem::path build{"../../../../"};
+  const std::filesystem::path examples{"../../../../../examples"};
+
   mgxx::server server(
       [](const std::string_view message) {
         std::cout << "[mgxx::server] " << message;
@@ -61,7 +64,7 @@ int main(int, char**) {
       MG_LL_DEBUG);
 
 #if MG_TLS == MG_TLS_OPENSSL || MG_TLS == MG_TLS_MBED
-  const auto ca = read_file(std::filesystem::absolute("../../../root.pem"));
+  const auto ca = read_file(build / "root.pem");
   if (!ca) {
     std::cerr << "[mgxx::server] Failed to load server's root key" << '\n';
     return 1;
@@ -70,13 +73,13 @@ int main(int, char**) {
 
 #if MG_TLS == MG_TLS_BUILTIN || MG_TLS == MG_TLS_OPENSSL || \
     MG_TLS == MG_TLS_MBED
-  const auto cert = read_file(std::filesystem::absolute("../../../server.crt"));
+  const auto cert = read_file(build / "server.crt");
   if (!cert) {
     std::cerr << "[mgxx::server] Failed to load server's certificate" << '\n';
     return 1;
   }
 
-  const auto key = read_file(std::filesystem::absolute("../../../server.key"));
+  const auto key = read_file(build / "server.key");
   if (!key) {
     std::cerr << "[mgxx::server] Failed to load server's key" << '\n';
     return 1;
@@ -144,9 +147,8 @@ int main(int, char**) {
           })
       .on_request(
           "/file",
-          [](const request&, const std::shared_ptr<response>& res) {
-            auto file =
-                std::make_unique<std::ifstream>("../../../../example/tls.cmd");
+          [examples](const request&, const std::shared_ptr<response>& res) {
+            auto file = std::make_unique<std::ifstream>(examples / "tls.cmd");
             if (!file->is_open()) {
               res->send(status_code::internal_server_error,
                         "Failed to open file");
@@ -156,8 +158,7 @@ int main(int, char**) {
             res->get_headers().set("Content-Type", "text/plain");
             res->stream(
                 status_code::ok,
-                // "chunked" by default. You can set "chunked" and compression
-                // algorithm after the status code argument.
+                /* "gzip, chunked", */
                 [file = std::move(file)]() -> std::optional<std::string> {
                   if (file->eof()) {
                     // terminating chunk
@@ -248,9 +249,10 @@ int main(int, char**) {
           })
       .on_async_request(
           "/async/file",
-          [](const request&, const std::shared_ptr<async_response>& res) {
-            std::thread thread([res] {
-              std::ifstream file("../../../../example/tls.cmd");
+          [examples](const request&,
+                     const std::shared_ptr<async_response>& res) {
+            std::thread thread([examples, res] {
+              std::ifstream file(examples / "tls.cmd");
               if (!file.is_open()) {
                 res->send(status_code::internal_server_error,
                           "Failed to open file");
@@ -278,7 +280,7 @@ int main(int, char**) {
               }
 
               if (stream->failed()) {
-                MG_ERROR(("Failed to send file."));
+                std::cerr << "[mgxx::server] Failed to send file.\n";
               }
             });
 
