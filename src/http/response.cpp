@@ -21,7 +21,8 @@ void response::send(const int code, const std::string& body) {
   }
 
   const auto headers = m_headers.format();
-  mg_http_reply(m_conn, code, headers.c_str(), "%s\n", body.c_str());
+  mg_http_reply(m_conn, code, headers.c_str(), "%.*s", body.size(),
+                body.data());
   m_conn = nullptr;
 }
 }  // namespace mgxx::http

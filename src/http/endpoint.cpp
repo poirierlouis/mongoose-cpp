@@ -238,7 +238,7 @@ bool endpoint::handle_response(mg_connection* conn, const mg_str* data) {
   }
 
   const auto& [code, headers, body] = response->get_payload();
-  mg_http_reply(conn, code, headers.c_str(), "%s\n", body.c_str());
+  mg_http_reply(conn, code, headers.c_str(), "%.*s", body.size(), body.data());
   response->mark_completed();
 
   responses.erase(it);
