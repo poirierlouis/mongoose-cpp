@@ -39,6 +39,7 @@ endif ()
 # Static library
 #
 add_library(${PROJECT_NAME} STATIC
+        src/http/asset.cpp
         src/http/async_request.cpp
         src/http/async_response.cpp
         src/http/async_stream.cpp

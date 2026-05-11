@@ -38,7 +38,7 @@ void headers::remove(const std::string_view name) {
 
 void headers::clear() { m_headers.clear(); }
 
-std::string headers::format(const size_t capacity) const {
+std::string headers::format(const bool empty, const size_t capacity) const {
   std::string headers;
   if (capacity > 0) {
     headers.reserve(capacity);
@@ -49,7 +49,7 @@ std::string headers::format(const size_t capacity) const {
     headers.append(value);
     headers.append("\r\n");
   }
-  if (headers.empty()) {
+  if (!empty && headers.empty()) {
     headers.append("Content-Type: text/plain\r\n");
   }
   return headers;
