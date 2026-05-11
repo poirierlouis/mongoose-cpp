@@ -1,0 +1,1 @@
+#include "mgxx/http/internal/asset.hpp"

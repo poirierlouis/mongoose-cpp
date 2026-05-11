@@ -305,6 +305,10 @@ int main(int, char**) {
             thread.detach();
           });
 
+  http->on_asset("/",
+                 std::filesystem::absolute(examples / "simple.html").string())
+      .on_assets("/assets/#",
+                 std::filesystem::absolute(examples / "assets").string());
   while (is_running) {
     server.poll(100);
   }

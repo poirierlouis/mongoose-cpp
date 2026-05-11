@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>mgxx &middot; example</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            color-scheme: light dark;
+
+            display: flex;
+            flex-flow: column;
+
+            font-family: monospace, sans-serif;
+            color: light-dark(black, #d0d0d0);
+            background-color: light-dark(white, #212121);
+        }
+
+        main {
+            display: flex;
+            flex-flow: column;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+        }
+
+        footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 33%;
+
+            background-color: #121212;
+
+            & img {
+                margin-right: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main>
+    <h1>
+        This document was served using <a href="https://mongoose.ws/documentation/#mg_http_serve_file" target="_blank">
+        mongoose's feature</a>.
+    </h1>
+
+</main>
+
+<footer>
+    <img src="/assets/mgxx.svg" width="48" height="48" alt="mgxx logo" />
+    I wish you a wonderful day!
+</footer>
+</body>
+</html>

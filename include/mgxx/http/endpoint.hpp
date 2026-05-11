@@ -3,12 +3,14 @@
 
 #include <mongoose.h>
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <unordered_map>
 
 #include "mgxx/endpoint.hpp"
 #include "mgxx/http/async_response.hpp"
+#include "mgxx/http/internal/asset.hpp"
 #include "mgxx/http/listener.hpp"
 #include "mgxx/http/response.hpp"
 
@@ -22,12 +24,15 @@ class endpoint : public mgxx::endpoint {
   mg_str m_tls_key{};
   bool m_tls_alloc{false};
 
+  std::unordered_map<std::string_view, asset> m_assets{};
   std::unordered_map<std::string, std::unique_ptr<listener>> m_listeners{};
   std::unique_ptr<listener> m_fallback{};
 
   size_t m_request_counter{0};
   std::unordered_map<unsigned long, responses> m_pending_responses{};
   std::unordered_map<unsigned long, streams> m_pending_streams{};
+
+  endpoint& on_assets();
 
   void handle_poll(mg_connection* conn);
   void handle_secure(mg_connection* conn) const;
@@ -59,6 +64,22 @@ class endpoint : public mgxx::endpoint {
   void use_tls(std::string_view cert, std::string_view key);
   void use_tls(std::string_view ca, std::string_view cert,
                std::string_view key);
+
+  template <typename... Args>
+  endpoint& on_assets(const std::string_view path,
+                      const std::filesystem::path& assets, Args... args) {
+    auto& resource = m_assets[path];
+    resource.is_dir = true;
+    resource.path = assets.string();
+
+    return on_assets(args...);
+  }
+
+  endpoint& on_asset(std::string_view path, std::string asset);
+  endpoint& on_asset(std::string_view path, std::string asset,
+                     std::string mime_type);
+  endpoint& on_asset(std::string_view path, std::string asset,
+                     std::string mime_type, const headers& headers);
 
   template <typename F>
   endpoint& on_request(const std::string& path, F&& callback) {

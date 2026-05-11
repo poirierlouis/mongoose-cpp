@@ -1,6 +1,7 @@
 #include "mgxx/http/endpoint.hpp"
 
 #include <ranges>
+#include <utility>
 
 #include "mgxx/internal/remote_context.hpp"
 #include "mgxx/server.hpp"
@@ -53,6 +54,26 @@ void endpoint::use_tls(const std::string_view ca, const std::string_view cert,
   m_tls_cert = mg_str_n(cert.data(), cert.size());
   m_tls_key = mg_str_n(key.data(), key.size());
 }
+
+endpoint& endpoint::on_asset(const std::string_view path, std::string asset) {
+  return on_asset(path, std::move(asset), {}, headers{});
+}
+
+endpoint& endpoint::on_asset(const std::string_view path, std::string asset,
+                             std::string mime_type) {
+  return on_asset(path, std::move(asset), std::move(mime_type), headers{});
+}
+
+endpoint& endpoint::on_asset(const std::string_view path, std::string asset,
+                             std::string mime_type, const headers& headers) {
+  auto& resource = m_assets[path];
+  resource.path = std::move(asset);
+  resource.mime_type = std::move(mime_type);
+  resource.headers = headers.format(true);
+  return *this;
+}
+
+endpoint& endpoint::on_assets() { return *this; }
 
 void endpoint::handle(mg_connection* conn, const int ev, void* ev_data) {
   if (ev == MG_EV_ACCEPT) {
@@ -135,6 +156,28 @@ void endpoint::handle_http_message(mg_connection* conn, mg_http_message* msg) {
       } else {
         const auto res = std::make_shared<response>(conn);
         listener->invoke(request, res);
+      }
+      return;
+    }
+  }
+
+  for (const auto& [path, asset] : m_assets) {
+    const mg_str str = mg_str_n(path.data(), path.size());
+    if (mg_match(msg->uri, str, nullptr)) {
+      mg_http_serve_opts opts = {
+          .root_dir = nullptr,
+          .extra_headers =
+              asset.headers.empty() ? nullptr : asset.headers.c_str(),
+          .mime_types =
+              asset.mime_type.empty() ? nullptr : asset.mime_type.data(),
+          .fs = nullptr};
+      if (asset.is_dir) {
+        const auto root_dir =
+            std::format("{}={}", path.substr(0, path.size() - 2), asset.path);
+        opts.root_dir = root_dir.c_str();
+        mg_http_serve_dir(conn, msg, &opts);
+      } else {
+        mg_http_serve_file(conn, msg, asset.path.data(), &opts);
       }
       return;
     }

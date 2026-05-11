@@ -72,7 +72,8 @@ class headers {
   void remove(std::string_view name);
   void clear();
 
-  [[nodiscard]] std::string format(size_t capacity = 0) const;
+  [[nodiscard]] std::string format(bool empty = false,
+                                   size_t capacity = 0) const;
 };
 }  // namespace mgxx::http
 
