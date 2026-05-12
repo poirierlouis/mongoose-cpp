@@ -226,12 +226,7 @@ void endpoint::handle_write(mg_connection* conn) {
   }
 }
 
-void endpoint::handle_close(const mg_connection* conn) {
-  const auto dispose = [conn] {
-    const auto* context = static_cast<remote_context*>(conn->fn_data);
-    delete context;
-  };
-
+void endpoint::handle_close(mg_connection* conn) {
   if (const auto& it = m_pending_responses.find(conn->id);
       it != m_pending_responses.end()) {
     for (const auto& response : it->second | std::views::values) {
@@ -248,7 +243,12 @@ void endpoint::handle_close(const mg_connection* conn) {
     m_pending_streams.erase(it);
   }
 
-  dispose();
+  if (conn->data[0] == 'R') {
+    const auto* context = static_cast<remote_context*>(conn->fn_data);
+    delete context;
+    conn->fn_data = nullptr;
+    conn->data[0] = '\0';
+  }
 }
 
 bool endpoint::handle_response(mg_connection* conn, const mg_str* data) {
@@ -336,6 +336,7 @@ void endpoint::promote_context(mg_connection* conn) {
   auto* context = new remote_context(this, conn);
   conn->fn = &event_manager_context_handler;
   conn->fn_data = context;
+  conn->data[0] = 'R';
 }
 
 void endpoint::setup_context(const mg_connection* conn) {

@@ -37,23 +37,22 @@ class server {
 
   std::vector<std::shared_ptr<endpoint>> m_endpoints{};
 
+  void start();
+  void stop();
   void register_logger(int level, size_t size);
-  void setup();
 
  public:
   server();
   explicit server(int level);
-
   template <typename F>
   explicit server(F&& callback, const int level = MG_LL_DEBUG,
                   const size_t size = 8192) {
     m_logger.listener =
         std::make_unique<lambda_logger_listener<F>>(std::forward<F>(callback));
     register_logger(level, size);
-    setup();
+    start();
   }
-
-  ~server() = default;
+  ~server();
 
   server(const server&) = delete;
   server& operator=(const server&) = delete;

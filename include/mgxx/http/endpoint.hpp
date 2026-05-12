@@ -39,7 +39,7 @@ class endpoint : public mgxx::endpoint {
   void handle_http_message(mg_connection* conn, mg_http_message* msg);
   void handle_wakeup(mg_connection* conn, const mg_str* data);
   void handle_write(mg_connection* conn);
-  void handle_close(const mg_connection* conn);
+  void handle_close(mg_connection* conn);
 
   [[nodiscard]] bool handle_response(mg_connection* conn, const mg_str* data);
   [[nodiscard]] bool handle_stream(mg_connection* conn, const mg_str* data);

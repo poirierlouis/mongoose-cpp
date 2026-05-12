@@ -30,12 +30,14 @@ void event_manager_logger(const char ch, void* param) {
   }
 }
 
-server::server() { setup(); }
+server::server() { start(); }
 
 server::server(const int level) {
   mg_log_set(level);
-  setup();
+  start();
 }
+
+server::~server() { stop(); }
 
 bool server::is_async() const { return m_wakeup; }
 
@@ -54,6 +56,24 @@ std::shared_ptr<http::endpoint> server::listen_http(const std::string& host) {
 
 void server::poll(const int ms) const { mg_mgr_poll(m_mgr.get(), ms); }
 
+void server::start() {
+  m_mgr = std::make_shared<mg_mgr>();
+  mg_mgr_init(m_mgr.get());
+
+  m_wakeup = mg_wakeup_init(m_mgr.get());
+  if (!m_wakeup) {
+    MG_ERROR(("errmsg=\"Failed to initialize asynchronous mode\""));
+  }
+}
+
+void server::stop() {
+  mg_mgr_free(m_mgr.get());
+#if defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER >= 0x03000000 && \
+    defined(MBEDTLS_PSA_CRYPTO_C)
+  mbedtls_psa_crypto_free();
+#endif
+}
+
 void server::register_logger(const int level, const size_t size) {
   if (!m_logger.listener) {
     return;
@@ -62,27 +82,5 @@ void server::register_logger(const int level, const size_t size) {
   m_logger.buffer.resize(size);
   mg_log_set_fn(&event_manager_logger, this);
   mg_log_set(level);
-}
-
-void server::setup() {
-  m_mgr = std::shared_ptr<mg_mgr>(
-      [] {
-        auto* mgr = new mg_mgr;
-        mg_mgr_init(mgr);
-        return mgr;
-      }(),
-      [](mg_mgr* mgr) {
-        mg_mgr_free(mgr);
-        delete mgr;
-
-#if defined(MBEDTLS_VERSION_NUMBER) && MBEDTLS_VERSION_NUMBER >= 0x03000000 && \
-    defined(MBEDTLS_PSA_CRYPTO_C)
-        mbedtls_psa_crypto_free();
-#endif
-      });
-  m_wakeup = mg_wakeup_init(m_mgr.get());
-  if (!m_wakeup) {
-    MG_ERROR(("errmsg=\"Failed to initialize asynchronous mode\""));
-  }
 }
 }  // namespace mgxx
