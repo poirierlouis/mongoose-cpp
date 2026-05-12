@@ -13,6 +13,17 @@
       }
     },
 
+    {
+      "name": "base-linux",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+
     {"name": "tls-none", "hidden": true, "cacheVariables": {"MGXX_TLS": "none"}},
     {"name": "tls-builtin", "hidden": true, "cacheVariables": {"MGXX_TLS": "builtin"}},
     {"name": "tls-openssl", "hidden": true, "cacheVariables": {"MGXX_TLS": "openssl"}},
@@ -29,7 +40,17 @@
     {"name": "examples-win", "displayName": "Examples", "inherits": ["base-win", "tls-none", "examples"]},
     {"name": "examples-win-tls", "displayName": "Examples w/ TLS builtin", "inherits": ["base-win", "tls-builtin", "examples"]},
     {"name": "examples-win-openssl", "displayName": "Examples w/ OpenSSL", "inherits": ["base-win", "tls-openssl", "examples"]},
-    {"name": "examples-win-mbedtls", "displayName": "Examples w/ Mbed-TLS", "inherits": ["base-win", "tls-mbedtls", "examples"]}
+    {"name": "examples-win-mbedtls", "displayName": "Examples w/ Mbed-TLS", "inherits": ["base-win", "tls-mbedtls", "examples"]},
+
+    {"name": "lib-linux", "displayName": "Static Library", "inherits": ["base-linux", "tls-none", "no-examples"]},
+    {"name": "lib-linux-tls", "displayName": "Static Library w/ TLS builtin", "inherits": ["base-linux", "tls-builtin", "no-examples"]},
+    {"name": "lib-linux-openssl", "displayName": "Static Library w/ OpenSSL", "inherits": ["base-linux", "tls-openssl", "no-examples"]},
+    {"name": "lib-linux-mbedtls", "displayName": "Static Library w/ Mbed-TLS", "inherits": ["base-linux", "tls-mbedtls", "no-examples"]},
+
+    {"name": "examples-linux", "displayName": "Examples", "inherits": ["base-linux", "tls-none", "examples"]},
+    {"name": "examples-linux-tls", "displayName": "Examples w/ TLS builtin", "inherits": ["base-linux", "tls-builtin", "examples"]},
+    {"name": "examples-linux-openssl", "displayName": "Examples w/ OpenSSL", "inherits": ["base-linux", "tls-openssl", "examples"]},
+    {"name": "examples-linux-mbedtls", "displayName": "Examples w/ Mbed-TLS", "inherits": ["base-linux", "tls-mbedtls", "examples"]}
   ],
   "buildPresets": []
 }
