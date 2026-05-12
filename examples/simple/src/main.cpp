@@ -54,8 +54,12 @@ std::optional<int> to_int(const std::string_view str) {
 int main(int, char**) {
   std::signal(SIGINT, &signal_handler);
 
+#ifdef _WIN32
   const std::filesystem::path build{"../../../../"};
-  const std::filesystem::path examples{"../../../../../examples"};
+#else
+  const std::filesystem::path build{"../../"};
+#endif
+  const std::filesystem::path examples{build / ".." / "examples"};
 
   mgxx::server server(
       [](const std::string_view message) {
