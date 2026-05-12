@@ -1,15 +1,11 @@
 name: "CodeQL"
 
-on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+on: [ pull_request ]
 
 jobs:
   analyze:
-    name: Analyze w/ OpenSSL
-    runs-on: windows-latest
+    name: Analyze w/ OpenSSL (${{ matrix.preset }})
+    runs-on: ${{ matrix.os }}
     permissions:
       actions: read
       contents: read
@@ -18,7 +14,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        preset: ["lib-win-openssl"]
+        include:
+          - os: windows-latest
+            preset: lib-win-openssl
+          - os: ubuntu-latest
+            preset: lib-linux-openssl
 
     steps:
       - name: Checkout
@@ -34,6 +34,7 @@ jobs:
           trap-caching: true
 
       - name: Setup MSVC
+        if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Setup CMake
@@ -45,7 +46,7 @@ jobs:
       - name: Run CodeQL
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:cpp"
+          category: "/language:cpp/preset:${{ matrix.preset }}"
           upload: failure-only
           output: sarif-results
 
