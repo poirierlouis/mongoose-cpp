@@ -14,4 +14,4 @@ jobs:
         uses: jidicula/clang-format-action@v4.18.0
         with:
           clang-format-version: '22'
-          include-regex: '^(\.\/)?(example\/src|src\/|include\/).*\.(h|hpp|cpp)$'
+          include-regex: '^[\.\/]?[examples\/|src\/|include\/].*[\.hpp|\.cpp]$'
