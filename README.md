@@ -102,14 +102,12 @@ int main() {
   }
 
   // Lambda handler
-  http->on_request("/", [](const request&,
-                           const std::shared_ptr<response>& res) {
+  http->on_request("/", [](const request&, response& res) {
     res->send(status_code::ok, "Hello, world!");
   });
 
   // Parameterized route with capture groups
-  http->on_request("/user/*", [](const request& req,
-                                 const std::shared_ptr<response>& res) {
+  http->on_request("/user/*", [](const request& req, response& res) {
     const auto name = req.get_param(0).value_or("unknown");
     res->send(status_code::ok, std::format("Hello, {}!", name));
   });
@@ -139,8 +137,7 @@ const std::string ca = "data of ca.pem";
 http->use_tls(ca, cert, key);
 
 // Access client's certificate info
-http->on_request("/secure", [](const request& req,
-                               const std::shared_ptr<response>& res) {
+http->on_request("/secure", [](const request& req, response& res) {
   if (const auto info = req.get_tls_cert_info().lock()) {
     res->send(status_code::ok, "Welcome, " + info->get_subject_name());
   } else {
@@ -154,8 +151,7 @@ http->on_request("/secure", [](const request& req,
 You can send a response in chunks. Optionally, you can set a compression
 algorithm. However, you are responsible for compressing the data yourself:
 ```cpp
-http->on_request("/chunked", [](const request& req,
-                                const std::shared_ptr<response>& res) {
+http->on_request("/chunked", [](const request& req, response& res) {
   res->stream(status_code::ok, /* "gzip, chunked", */
               []() -> std::optional<std::string> {
     if (eof) {
