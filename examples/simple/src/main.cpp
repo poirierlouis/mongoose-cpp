@@ -9,18 +9,18 @@
 
 using namespace mgxx::http;
 
-void simple_handler(const request&, const std::shared_ptr<response>& res) {
-  res->send(status_code::im_a_teapot,
-            "What starts with T, ends with T, but only has T in?");
+void simple_handler(const request&, response& res) {
+  res.send(status_code::im_a_teapot,
+           "What starts with T, ends with T, but only has T in?");
 }
 
 class example {
   int trick = 67;
 
  public:
-  void simple(const request&, const std::shared_ptr<response>& res) {
-    res->send(status_code::ok,
-              std::format("I'm a class member callback: {}", trick));
+  void simple(const request&, response& res) {
+    res.send(status_code::ok,
+             std::format("I'm a class member callback: {}", trick));
   }
 };
 
@@ -105,27 +105,23 @@ int main(int, char**) {
   example ex;
   uint64_t counter{0};
   http->on_request("/joke", &simple_handler)
-      .on_request(
-          "/class",
-          [&ex](const request& req, const std::shared_ptr<response>& res) {
-            ex.simple(req, res);
-          })
-      .on_request(
-          "/lambda",
-          [&counter](const request&, const std::shared_ptr<response>& res) {
-            res->send(
-                status_code::ok,
-                std::format("I'm a lambda callback ({} calls).", ++counter));
-          })
+      .on_request("/class", [&ex](const request& req,
+                                  response& res) { ex.simple(req, res); })
+      .on_request("/lambda",
+                  [&counter](const request&, response& res) {
+                    res.send(status_code::ok,
+                             std::format("I'm a lambda callback ({} calls).",
+                                         ++counter));
+                  })
       .on_request("/who",
-                  [](const request& req, const std::shared_ptr<response>& res) {
-                    res->send(status_code::ok,
-                              std::format("You are {}!", req.get_remote_ip()));
+                  [](const request& req, response& res) {
+                    res.send(status_code::ok,
+                             std::format("You are {}!", req.get_remote_ip()));
                   })
       .on_request(
           "/headers",
-          [](const request&, const std::shared_ptr<response>& res) {
-            auto& headers = res->get_headers();
+          [](const request&, response& res) {
+            auto& headers = res.get_headers();
             headers.set("Authorization", "Bearer [token]");
 
             std::string body;
@@ -143,20 +139,20 @@ int main(int, char**) {
                 std::format("X-Fake is {}",
                             headers.get_view("x-fake").value_or("<not found>"));
 
-            res->send(status_code::ok, body);
+            res.send(status_code::ok, body);
           })
       .on_request(
           "/file",
-          [examples](const request&, const std::shared_ptr<response>& res) {
+          [examples](const request&, response& res) {
             auto file = std::make_unique<std::ifstream>(examples / "tls.cmd");
             if (!file->is_open()) {
-              res->send(status_code::internal_server_error,
-                        "Failed to open file");
+              res.send(status_code::internal_server_error,
+                       "Failed to open file");
               return;
             }
 
-            res->get_headers().set("Content-Type", "text/plain");
-            res->stream(
+            res.get_headers().set("Content-Type", "text/plain");
+            res.stream(
                 status_code::ok,
                 /* "gzip, chunked", */
                 [file = std::move(file)]() -> std::optional<std::string> {
@@ -171,22 +167,22 @@ int main(int, char**) {
                   chunk.resize(file->gcount());
                   return chunk;
                 });
-            res->send(status_code::bad_request);  // no-op
+            res.send(status_code::bad_request);  // no-op
           })
       .on_request(
           "/api/#",
-          [](const request& req, const std::shared_ptr<response>& res) {
+          [](const request& req, response& res) {
             const auto param = req.get_param(0).value_or("");
-            res->send(
+            res.send(
                 status_code::ok,
                 std::format("I'm capturing one group for API endpoints: {}",
                             param));
           })
       .on_request(
           "/cert",
-          [](const request& req, const std::shared_ptr<response>& res) {
+          [](const request& req, response& res) {
             if (const auto info = req.get_tls_cert_info().lock()) {
-              res->send(
+              res.send(
                   status_code::ok,
                   std::format("--- Client certificate ---\n"
                               "Subject:{}\n"
@@ -199,12 +195,12 @@ int main(int, char**) {
                               info->get_serial_number(), info->get_not_before(),
                               info->get_not_after(), info->get_fingerprint()));
             } else {
-              res->send(status_code::bad_request,
-                        "No client certificate provided");
+              res.send(status_code::bad_request,
+                       "No client certificate provided");
             }
           })
-      .on_fallback([](const request&, const std::shared_ptr<response>& res) {
-        res->send(status_code::not_found, "404 Not Found");
+      .on_fallback([](const request&, response& res) {
+        res.send(status_code::not_found, "404 Not Found");
       });
 
   std::atomic_uint64_t async_counter{1};

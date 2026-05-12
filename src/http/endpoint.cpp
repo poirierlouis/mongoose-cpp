@@ -154,7 +154,7 @@ void endpoint::handle_http_message(mg_connection* conn, mg_http_message* msg) {
         m_pending_responses[conn->id][id] = res;
         listener->invoke(request, res);
       } else {
-        const auto res = std::make_shared<response>(conn);
+        response res(conn);
         listener->invoke(request, res);
       }
       return;
@@ -191,7 +191,7 @@ void endpoint::handle_http_message(mg_connection* conn, mg_http_message* msg) {
       m_pending_responses[conn->id][id] = res;
       m_fallback->invoke(request, res);
     } else {
-      const auto res = std::make_shared<response>(conn);
+      response res(conn);
       m_fallback->invoke(request, res);
     }
     return;

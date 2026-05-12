@@ -20,8 +20,7 @@ class listener {
   [[nodiscard]] size_t get_groups() const { return m_groups; }
   [[nodiscard]] bool is_async() const { return m_is_async; }
 
-  virtual void invoke(const request& req,
-                      const std::shared_ptr<response>& res) {};
+  virtual void invoke(const request& req, response& res) {};
   virtual void invoke(const request& req,
                       const std::shared_ptr<async_response>& res) {};
 };
@@ -36,8 +35,17 @@ class lambda_http_listener : public listener {
         m_callback(std::forward<F>(callback)) {}
   ~lambda_http_listener() override = default;
 
-  void invoke(const request& req, const std::shared_ptr<R>& res) override {
-    m_callback(req, res);
+  void invoke(const request& req, response& res) override {
+    if constexpr (!std::is_same_v<R, async_response>) {
+      m_callback(req, res);
+    }
+  }
+
+  void invoke(const request& req,
+              const std::shared_ptr<async_response>& res) override {
+    if constexpr (std::is_same_v<R, async_response>) {
+      m_callback(req, res);
+    }
   }
 };
 
