@@ -161,7 +161,7 @@ http->on_request("/chunked", [](const request& req, response& res) {
 
     std::string chunk;
     // read from a source
-    return chunk;
+    return std::move(chunk);
   });
 
   // no-op
@@ -244,11 +244,11 @@ Fingerprint: 76:3F:5A:29:8B:C6:1A:76:A3:E2:DA:1F:0D:75:6F:40:91:A3:71:EA:74:1F:9
 
 ## Examples
 
-See the [`example/`](example/src/main.cpp) for a complete runnable example
+See [`examples/`](examples/simple/src/main.cpp) for a complete runnable example
 demonstrating all these features, including different handler types,
 parameterized routes, TLS, and asynchronous responses.
 
-It includes a `tls.cmd` script to generate self-signed certificates for 
+It includes a `tls.(sh|cmd)` script to generate self-signed certificates for 
 testing. It will automatically run when you build the example project as long as
 you have OpenSSL installed. You can manually add `client.p12` certificate in 
 your browser to test mTLS.
