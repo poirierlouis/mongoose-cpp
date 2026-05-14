@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <mgxx/mgxx.hpp>
+#include <mutex>
 #include <thread>
 
 using namespace mgxx::http;
@@ -60,9 +61,11 @@ int main(int, char**) {
   const std::filesystem::path build{"../../"};
 #endif
   const std::filesystem::path examples{build / ".." / "examples"};
+  std::mutex mutex;
 
   mgxx::server server(
-      [](const std::string_view message) {
+      [&mutex](const std::string_view message) {
+        std::lock_guard lock(mutex);
         std::cout << "[mgxx::server] " << message;
       },
       MG_LL_DEBUG);
@@ -273,15 +276,21 @@ int main(int, char**) {
                 file.read(chunk.data(),
                           static_cast<std::streamsize>(chunk.size()));
                 chunk.resize(file.gcount());
-                stream->send(std::move(chunk));
+                if (!stream->send(std::move(chunk))) {
+                  std::cerr << "[mgxx::server] Failed to stream a chunk.\n";
+                  break;
+                }
 
                 // simulate busy work
                 std::this_thread::sleep_for(std::chrono::milliseconds(16));
               }
 
-              if (stream->failed()) {
-                std::cerr << "[mgxx::server] Failed to send file.\n";
+              if (stream->is_closed()) {
+                std::cout << "[mgxx::server] Connection closed by client.\n";
+                return;
               }
+
+              std::cout << "[mgxx::server] Finished streaming file.\n";
             });
 
             thread.detach();

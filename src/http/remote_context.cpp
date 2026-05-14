@@ -5,7 +5,10 @@
 namespace mgxx::http {
 remote_context::remote_context(mgxx::endpoint* endpoint,
                                const mg_connection* conn)
-    : m_endpoint(endpoint), m_ip(format_ip(&conn->rem)), m_stream(nullptr) {}
+    : m_endpoint(endpoint),
+      m_ip(format_ip(&conn->rem)),
+      m_stream(nullptr),
+      m_async_stream(nullptr) {}
 
 std::string_view remote_context::get_remote_ip() const { return m_ip; }
 
@@ -212,8 +215,17 @@ void remote_context::handle(mg_connection* conn, const int ev,
   m_endpoint->handle(conn, ev, ev_data);
 }
 
-void remote_context::set_stream(std::unique_ptr<stream_producer> producer) {
-  m_stream = std::move(producer);
+void remote_context::close() {
+  m_stream = nullptr;
+
+  if (m_async_stream) {
+    m_async_stream->mark_closed();
+  }
+  m_async_stream = nullptr;
+}
+
+void remote_context::set_stream(std::unique_ptr<stream_producer> stream) {
+  m_stream = std::move(stream);
 }
 
 void remote_context::pump_stream(mg_connection* conn) {
@@ -228,17 +240,19 @@ void remote_context::pump_stream(mg_connection* conn) {
   const auto chunk = m_stream->get();
   if (!chunk) {
     mg_http_write_chunk(conn, "", 0);
-    m_stream.reset();
+    m_stream = nullptr;
     return;
   }
 
   mg_http_write_chunk(conn, chunk->c_str(), chunk->size());
 }
 
-void remote_context::pump_async_stream(
-    const mg_connection* conn, const std::shared_ptr<async_stream>& stream) {
-  if (const auto state = stream->get_state();
-      state != async_stream::state::flush) {
+void remote_context::set_async_stream(async_stream* async_stream) {
+  m_async_stream = async_stream;
+}
+
+void remote_context::pump_async_stream(const mg_connection* conn) const {
+  if (!m_async_stream) {
     return;
   }
 
@@ -246,6 +260,15 @@ void remote_context::pump_async_stream(
     return;
   }
 
-  stream->mark_empty();
+  m_async_stream->mark_empty();
+}
+
+void remote_context::close_async_stream() {
+  if (!m_async_stream) {
+    return;
+  }
+
+  m_async_stream->mark_closed();
+  m_async_stream = nullptr;
 }
 }  // namespace mgxx::http

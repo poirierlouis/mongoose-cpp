@@ -11,14 +11,12 @@
 #include "mgxx/endpoint.hpp"
 #include "mgxx/http/async_response.hpp"
 #include "mgxx/http/internal/asset.hpp"
+#include "mgxx/http/internal/payload.hpp"
 #include "mgxx/http/listener.hpp"
 #include "mgxx/http/response.hpp"
 
 namespace mgxx::http {
 class endpoint : public mgxx::endpoint {
-  using responses = std::unordered_map<size_t, std::shared_ptr<async_response>>;
-  using streams = std::unordered_map<size_t, std::shared_ptr<async_stream>>;
-
   mg_str m_tls_ca{};
   mg_str m_tls_cert{};
   mg_str m_tls_key{};
@@ -28,24 +26,24 @@ class endpoint : public mgxx::endpoint {
   std::unordered_map<std::string, std::unique_ptr<listener>> m_listeners{};
   std::unique_ptr<listener> m_fallback{};
 
-  size_t m_request_counter{0};
-  std::unordered_map<unsigned long, responses> m_pending_responses{};
-  std::unordered_map<unsigned long, streams> m_pending_streams{};
+  internal::queue_response m_responses{};
+  internal::queue_stream m_streams{};
 
   endpoint& on_assets();
 
-  void handle_poll(mg_connection* conn);
   void handle_secure(mg_connection* conn) const;
   void handle_http_message(mg_connection* conn, mg_http_message* msg);
-  void handle_wakeup(mg_connection* conn, const mg_str* data);
+  void handle_wakeup(const mg_connection* conn, void* ev_data);
   void handle_write(mg_connection* conn);
   void handle_close(mg_connection* conn);
 
-  [[nodiscard]] bool handle_response(mg_connection* conn, const mg_str* data);
-  [[nodiscard]] bool handle_stream(mg_connection* conn, const mg_str* data);
+  void handle_responses();
+  void handle_streams();
 
   void promote_context(mg_connection* conn);
   void setup_context(const mg_connection* conn);
+
+  [[nodiscard]] mg_connection* find_conn_by_id(unsigned long id) const;
 
   [[nodiscard]] static size_t count_groups(std::string_view path);
 
