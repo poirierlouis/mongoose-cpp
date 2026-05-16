@@ -39,6 +39,8 @@ endif ()
 # Static library
 #
 add_library(${PROJECT_NAME} STATIC
+        src/http/internal/payload.cpp
+
         src/http/asset.cpp
         src/http/async_request.cpp
         src/http/async_response.cpp
@@ -49,6 +51,8 @@ add_library(${PROJECT_NAME} STATIC
         src/http/remote_context.cpp
         src/http/request.cpp
         src/http/response.cpp
+
+        src/internal/queue.cpp
 
         src/endpoint.cpp
         src/server.cpp

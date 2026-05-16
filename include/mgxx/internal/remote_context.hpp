@@ -4,6 +4,7 @@
 #include <mongoose.h>
 
 #include <chrono>
+#include <memory>
 #include <string>
 
 #include "mgxx/endpoint.hpp"
@@ -19,6 +20,7 @@ class remote_context {
   std::string m_ip;
   std::shared_ptr<tls_cert_info> m_tls_cert;
   std::unique_ptr<stream_producer> m_stream;
+  std::weak_ptr<async_stream> m_async_stream;
 
  public:
   explicit remote_context(mgxx::endpoint* endpoint, const mg_connection* conn);
@@ -29,11 +31,14 @@ class remote_context {
 
   void setup(const mg_connection* conn);
   void handle(mg_connection* conn, int ev, void* ev_data) const;
+  void close();
 
-  void set_stream(std::unique_ptr<stream_producer> producer);
+  void set_stream(std::unique_ptr<stream_producer> stream);
   void pump_stream(mg_connection* conn);
-  void pump_async_stream(const mg_connection* conn,
-                         const std::shared_ptr<async_stream>& stream);
+
+  void set_async_stream(std::weak_ptr<async_stream> async_stream);
+  void pump_async_stream(const mg_connection* conn) const;
+  void close_async_stream();
 };
 
 #if MG_TLS == MG_TLS_OPENSSL || MG_TLS == MG_TLS_WOLFSSL

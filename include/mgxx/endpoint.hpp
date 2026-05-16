@@ -36,6 +36,7 @@ class endpoint {
   virtual ~endpoint() = default;
 
   [[nodiscard]] std::string_view get_host() const;
+  [[nodiscard]] unsigned long get_conn_id() const;
 };
 }  // namespace mgxx
 
