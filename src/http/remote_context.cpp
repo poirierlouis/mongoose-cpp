@@ -5,10 +5,7 @@
 namespace mgxx::http {
 remote_context::remote_context(mgxx::endpoint* endpoint,
                                const mg_connection* conn)
-    : m_endpoint(endpoint),
-      m_ip(format_ip(&conn->rem)),
-      m_stream(nullptr),
-      m_async_stream(nullptr) {}
+    : m_endpoint(endpoint), m_ip(format_ip(&conn->rem)), m_stream(nullptr) {}
 
 std::string_view remote_context::get_remote_ip() const { return m_ip; }
 
@@ -217,11 +214,7 @@ void remote_context::handle(mg_connection* conn, const int ev,
 
 void remote_context::close() {
   m_stream = nullptr;
-
-  if (m_async_stream) {
-    m_async_stream->mark_closed();
-  }
-  m_async_stream = nullptr;
+  close_async_stream();
 }
 
 void remote_context::set_stream(std::unique_ptr<stream_producer> stream) {
@@ -247,12 +240,14 @@ void remote_context::pump_stream(mg_connection* conn) {
   mg_http_write_chunk(conn, chunk->c_str(), chunk->size());
 }
 
-void remote_context::set_async_stream(async_stream* async_stream) {
-  m_async_stream = async_stream;
+void remote_context::set_async_stream(
+    std::weak_ptr<async_stream> async_stream) {
+  m_async_stream = std::move(async_stream);
 }
 
 void remote_context::pump_async_stream(const mg_connection* conn) const {
-  if (!m_async_stream) {
+  const auto stream = m_async_stream.lock();
+  if (!stream || stream->is_closed()) {
     return;
   }
 
@@ -260,15 +255,16 @@ void remote_context::pump_async_stream(const mg_connection* conn) const {
     return;
   }
 
-  m_async_stream->mark_empty();
+  stream->mark_empty();
 }
 
 void remote_context::close_async_stream() {
-  if (!m_async_stream) {
+  const auto stream = m_async_stream.lock();
+  if (!stream) {
     return;
   }
 
-  m_async_stream->mark_closed();
-  m_async_stream = nullptr;
+  stream->mark_closed();
+  m_async_stream.reset();
 }
 }  // namespace mgxx::http

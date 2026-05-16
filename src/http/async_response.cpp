@@ -55,12 +55,12 @@ void async_response::send(const int code, const std::string& body) {
   m_mgr.reset();
 }
 
-std::unique_ptr<async_stream> async_response::stream(status_code code,
+std::shared_ptr<async_stream> async_response::stream(status_code code,
                                                      std::string encoding) {
   return stream(static_cast<int>(code), std::move(encoding));
 }
 
-std::unique_ptr<async_stream> async_response::stream(const int code,
+std::shared_ptr<async_stream> async_response::stream(const int code,
                                                      std::string encoding) {
   const auto mgr = m_mgr.lock();
   if (!mgr) {
@@ -74,19 +74,13 @@ std::unique_ptr<async_stream> async_response::stream(const int code,
   auto preamble = std::format("HTTP/1.1 {} {}\r\n{}\r\n", code,
                               format_status_code(code), m_headers.format());
 
-  auto stream = std::make_unique<async_stream>(m_endpoint_conn, m_conn, m_mgr,
+  auto stream = std::make_shared<async_stream>(m_endpoint_conn, m_conn, m_mgr,
                                                m_queue_stream);
-  const auto stream_ptr = stream.get();
-  if (!mg_wakeup(mgr.get(), m_conn, &stream_ptr, sizeof(async_stream*))) {
-    MG_ERROR(("errmsg=\"Failed to stream response on %u, wakeup is full.\"",
-              m_conn));
-    return nullptr;
-  }
-
   internal::payload_stream payload;
   payload.conn = m_conn;
   payload.state = internal::payload_stream::state::preamble;
   payload.data = std::move(preamble);
+  payload.stream = stream.get();
   if (!m_queue_stream->push(std::move(payload))) {
     MG_ERROR(
         ("errmsg=\"Failed to stream response on %u, queue is full.\"", m_conn));

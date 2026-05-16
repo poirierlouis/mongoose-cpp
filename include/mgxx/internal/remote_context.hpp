@@ -20,7 +20,7 @@ class remote_context {
   std::string m_ip;
   std::shared_ptr<tls_cert_info> m_tls_cert;
   std::unique_ptr<stream_producer> m_stream;
-  async_stream* m_async_stream;
+  std::weak_ptr<async_stream> m_async_stream;
 
  public:
   explicit remote_context(mgxx::endpoint* endpoint, const mg_connection* conn);
@@ -36,7 +36,7 @@ class remote_context {
   void set_stream(std::unique_ptr<stream_producer> stream);
   void pump_stream(mg_connection* conn);
 
-  void set_async_stream(async_stream* async_stream);
+  void set_async_stream(std::weak_ptr<async_stream> async_stream);
   void pump_async_stream(const mg_connection* conn) const;
   void close_async_stream();
 };

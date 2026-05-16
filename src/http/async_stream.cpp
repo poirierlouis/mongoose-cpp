@@ -13,15 +13,14 @@ async_stream::async_stream(const unsigned long endpoint_conn,
       m_conn(conn),
       m_mgr(std::move(mgr)),
       m_queue(queue),
-      m_signal(MGXX_HTTP_ASYNC_STREAM_MAX_TICKETS),
-      m_closed(false) {}
+      m_signal(MGXX_HTTP_ASYNC_STREAM_MAX_TICKETS) {}
 
 bool async_stream::is_closed() const {
   return m_signal.load(std::memory_order_acquire) <= k_closed_threshold;
 }
 
 bool async_stream::send(std::string body) {
-  if (m_closed) {
+  if (is_closed()) {
     return false;
   }
 
@@ -33,6 +32,7 @@ bool async_stream::send(std::string body) {
 
   m_signal.fetch_sub(1, std::memory_order_acquire);
   if (m_signal.load(std::memory_order_relaxed) <= k_closed_threshold) {
+    m_signal.fetch_add(1, std::memory_order_relaxed);
     return false;
   }
 
@@ -42,8 +42,7 @@ bool async_stream::send(std::string body) {
   payload.data = std::move(body);
 
   if (!m_queue->push(std::move(payload))) {
-    m_signal.fetch_add(1, std::memory_order_release);
-    m_signal.notify_one();
+    m_signal.fetch_add(1, std::memory_order_relaxed);
     MG_ERROR(("errmsg=\"Failed to stream on %u, queue is full.\"", m_conn));
     return false;
   }
@@ -62,17 +61,26 @@ bool async_stream::wait() const {
     current = m_signal.load(std::memory_order_acquire);
   }
 
-  return !m_closed;
+  return current > k_closed_threshold;
 }
 
 void async_stream::close() {
   (void)send("");
-  m_closed = true;
+  m_signal.store(k_closed_sentinel, std::memory_order_release);
+  m_signal.notify_all();
 }
 
 void async_stream::mark_empty() {
-  m_signal.fetch_add(1, std::memory_order_release);
-  m_signal.notify_one();
+  auto current = m_signal.load(std::memory_order_relaxed);
+  while (current > k_closed_threshold &&
+         current < MGXX_HTTP_ASYNC_STREAM_MAX_TICKETS) {
+    if (m_signal.compare_exchange_weak(current,
+                                       MGXX_HTTP_ASYNC_STREAM_MAX_TICKETS,
+                                       std::memory_order_release)) {
+      m_signal.notify_all();
+      return;
+    }
+  }
 }
 
 void async_stream::mark_closed() {

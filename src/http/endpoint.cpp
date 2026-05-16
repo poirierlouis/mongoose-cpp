@@ -3,6 +3,7 @@
 #include <ranges>
 #include <utility>
 
+#include "mgxx/http/async_stream.hpp"
 #include "mgxx/internal/remote_context.hpp"
 #include "mgxx/server.hpp"
 
@@ -90,7 +91,7 @@ void endpoint::handle(mg_connection* conn, const int ev, void* ev_data) {
       handle_http_message(conn, static_cast<mg_http_message*>(ev_data));
       break;
     case MG_EV_WAKEUP:
-      handle_wakeup(conn, ev_data);
+      handle_wakeup(conn);
       break;
     case MG_EV_WRITE:
       handle_write(conn);
@@ -177,14 +178,10 @@ void endpoint::handle_http_message(mg_connection* conn, mg_http_message* msg) {
                 not_found::k_body);
 }
 
-void endpoint::handle_wakeup(const mg_connection* conn, void* ev_data) {
+void endpoint::handle_wakeup(const mg_connection* conn) {
   if (conn->is_listening) {
     handle_responses();
     handle_streams();
-  } else {
-    auto* context = static_cast<remote_context*>(conn->fn_data);
-    const auto* data = static_cast<mg_str*>(ev_data);
-    context->set_async_stream(*reinterpret_cast<async_stream**>(data->buf));
   }
 }
 
@@ -231,11 +228,14 @@ void endpoint::handle_streams() {
     auto* context = static_cast<remote_context*>(conn->fn_data);
     const auto& chunk = payload->data;
     if (payload->state == internal::payload_stream::state::preamble) {
+      const auto stream = static_cast<async_stream*>(payload->stream);
+      context->set_async_stream(stream->weak_from_this());
       mg_send(conn, chunk.data(), chunk.size());
       continue;
     }
 
     mg_http_write_chunk(conn, chunk.data(), chunk.size());
+    context->pump_async_stream(conn);
     if (chunk.empty()) {
       context->close_async_stream();
     }

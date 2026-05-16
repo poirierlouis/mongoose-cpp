@@ -36,6 +36,7 @@ struct payload_stream {
   unsigned long conn{0};
   state state{state::preamble};
   std::string data;
+  void* stream{nullptr};
 };
 
 using queue_response =

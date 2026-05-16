@@ -280,14 +280,6 @@ int main(int, char**) {
                   std::cerr << "[mgxx::server] Failed to stream a chunk.\n";
                   break;
                 }
-
-                // simulate busy work
-                std::this_thread::sleep_for(std::chrono::milliseconds(16));
-              }
-
-              if (stream->is_closed()) {
-                std::cout << "[mgxx::server] Connection closed by client.\n";
-                return;
               }
 
               std::cout << "[mgxx::server] Finished streaming file.\n";

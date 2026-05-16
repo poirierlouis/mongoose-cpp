@@ -17,14 +17,12 @@ namespace mgxx::http {
 class endpoint;
 class remote_context;
 
-class async_stream {
+class async_stream : public std::enable_shared_from_this<async_stream> {
   unsigned long m_endpoint_conn;
   unsigned long m_conn;
   std::weak_ptr<mg_mgr> m_mgr;
   internal::queue_stream* m_queue;
   std::atomic_signed_lock_free m_signal;
-
-  bool m_closed;
 
   friend class mgxx::http::endpoint;
   friend class mgxx::http::remote_context;

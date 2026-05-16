@@ -33,7 +33,7 @@ class endpoint : public mgxx::endpoint {
 
   void handle_secure(mg_connection* conn) const;
   void handle_http_message(mg_connection* conn, mg_http_message* msg);
-  void handle_wakeup(const mg_connection* conn, void* ev_data);
+  void handle_wakeup(const mg_connection* conn);
   void handle_write(mg_connection* conn);
   void handle_close(mg_connection* conn);
 

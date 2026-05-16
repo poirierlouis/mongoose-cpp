@@ -42,9 +42,9 @@ class async_response {
   void send(int code);
   void send(int code, const std::string& body);
 
-  [[nodiscard]] std::unique_ptr<async_stream> stream(
+  [[nodiscard]] std::shared_ptr<async_stream> stream(
       status_code code, std::string encoding = "chunked");
-  [[nodiscard]] std::unique_ptr<async_stream> stream(
+  [[nodiscard]] std::shared_ptr<async_stream> stream(
       int code, std::string encoding = "chunked");
 };
 }  // namespace mgxx::http
